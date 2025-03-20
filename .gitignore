@@ -1,0 +1,5 @@
+backend/venv/
+frontend/.next/
+frontend/next.config.js
+frontend/package-lock.json
+package-lock.json
