@@ -2,48 +2,19 @@
 
 A tool for comparing the carbon impact of different land use choices, specifically reforestation versus solar panel installation.
 
-## Features
-
-- Interactive map for selecting land areas
-- Calculation of potential carbon sequestration from reforestation
-- Calculation of potential energy generation and carbon offset from solar panels
-- Visual comparison of results
-
 ## Local Development Setup
 
 ### Prerequisites
 
-- Node.js (v14+)
+- Node.js (v15+)
 - Python (v3.8+)
-- Mapbox API key (for the map functionality)
+- Mapbox API key (for the map functionality; I believe it's free up to 50k uses, and we're going to navigate away from this library early in development I hope)
 
 ### Frontend Setup
-
-1. Navigate to the frontend directory:# Land Use Calculator
-
-A tool for comparing the carbon impact of different land use choices, specifically reforestation versus solar panel installation.
-
-## Features
-
-- Interactive map for selecting land areas
-- Calculation of potential carbon sequestration from reforestation
-- Calculation of potential energy generation and carbon offset from solar panels
-- Visual comparison of results
-
-## Local Development Setup
-
-### Prerequisites
-
-- Node.js (v14+)
-- Python (v3.8+)
-- Mapbox API key (for the map functionality)
-
-### Frontend Setup
-
 1. Navigate to the frontend directory: `cd frontend`
 2. Install dependencies: `npm install`
-3. Create a `.env` file add your Mapbox API key
-4. Start the development server: `npm start`
+3. Swap in your Mapbox API key in MapDisplay.js for `MAPBOX_TOKEN`
+4. Start the development server: `npm run dev`
 
 ### Backend Setup
 1. `cd backend`

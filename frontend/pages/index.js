@@ -92,7 +92,7 @@ export default function Home() {
       </main>
       
       <footer className="mt-8 py-4 text-center text-gray-600">
-        <p>Land Use Calculator - A tool for comparing carbon impact of land use choices</p>
+        <p>Software for Climate 2025 | Team AJAR</p>
       </footer>
     </div>
   );
