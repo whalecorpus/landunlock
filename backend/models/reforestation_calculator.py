@@ -1,4 +1,4 @@
-def calculate_reforestation_impact(area_hectares):
+def calculate_reforestation_impact(area_hectares, location):
     """
     Calculate the carbon sequestration potential for reforestation.
     

@@ -1,4 +1,4 @@
-def calculate_solar_impact(area_hectares):
+def calculate_solar_impact(area_hectares, location, orientation = 'south'):
     """
     Calculate the energy production and carbon offset from solar panels.
     
