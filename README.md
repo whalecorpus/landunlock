@@ -6,14 +6,15 @@ A tool for comparing the carbon impact of different land use choices, specifical
 
 ### Prerequisites
 
-- Node.js (v15+)
+- Node.js (v16+)
 - Python (v3.8+)
-- Mapbox API key (for the map functionality; I believe it's free up to 50k uses, and we're going to navigate away from this library early in development I hope)
+<!--- Mapbox API key (for the map functionality; I believe it's free up to 50k uses, and we're going to navigate away from this library early in development I hope)-->
+
 
 ### Frontend Setup
-1. Navigate to the frontend directory: `cd frontend`
+1. Navigate to the client directory: `cd client`
 2. Install dependencies: `npm install`
-3. Swap in your Mapbox API key in MapDisplay.js for `MAPBOX_TOKEN`
+<!--3. Swap in your Mapbox API key in MapDisplay.js for `MAPBOX_TOKEN`-->
 4. Start the development server: `npm run dev`
 
 ### Backend Setup
