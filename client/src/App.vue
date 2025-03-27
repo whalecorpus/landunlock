@@ -4,6 +4,45 @@ import { Map, Layers, Sources } from "vue3-openlayers"
 import LocationForm from './components/LocationForm.vue'
 
 const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
+const calculationResult = ref(null)
+const isLoading = ref(false)
+const error = ref(null)
+
+const calculatePotential = async (loc) => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    const response = await fetch('http://localhost:5000/api/calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        area: 1000 // Default 1000 sq meters for now
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    calculationResult.value = data
+  } catch (e) {
+    console.error('Calculation error:', e)
+    error.value = 'Failed to calculate solar potential. Please try again.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleLocationUpdate = (loc) => {
+  center.value = [loc.longitude, loc.latitude]
+  calculatePotential(loc)
+}
 </script>
 
 <template>
@@ -14,7 +53,25 @@ const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
 
     <main>
       <div class="content">
-        <LocationForm @update-location="(loc) => center = [loc.longitude, loc.latitude]" />
+        <div class="sidebar">
+          <LocationForm @update-location="handleLocationUpdate" />
+          
+          <!-- Loading state -->
+          <div v-if="isLoading" class="status-message loading">
+            Calculating potential...
+          </div>
+
+          <!-- Error state -->
+          <div v-if="error" class="status-message error">
+            {{ error }}
+          </div>
+
+          <!-- Results -->
+          <div v-if="calculationResult" class="results">
+            <h3>Calculation Results</h3>
+            <pre>{{ JSON.stringify(calculationResult, null, 2) }}</pre>
+          </div>
+        </div>
         
         <div class="map-container">
           <Map.OlMap style="width: 800px; height: 600px;">
@@ -59,9 +116,50 @@ h1 {
   gap: 2rem;
 }
 
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .map-container {
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.status-message {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.status-message.loading {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-message.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.results {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.results h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.results pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 768px) {
