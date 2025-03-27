@@ -339,8 +339,8 @@ def calculate_solar_impact(
         )
         
         # Create plots in case we want to add to frontend
-        weather_plot_base64 = create_weather_plots(solar_weather_timeseries)
-        ac_output_plot_base64 = create_ac_output_plot(pv_output)
+        # weather_plot_base64 = create_weather_plots(solar_weather_timeseries)
+        # ac_output_plot_base64 = create_ac_output_plot(pv_output)
         
         # Calculate annual energy production (MWh)
         annual_dc_energy = pv_output["DC Output (Wh)"].sum() / 1_000_000  # Convert to MWh

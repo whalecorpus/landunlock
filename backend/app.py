@@ -1,28 +1,35 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
-from models.util import Point
 from models.util import Point
 from models.solar_calculator import calculate_solar_impact
 from models.reforestation_calculator import calculate_reforestation_impact
 import sys
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)  # Basic CORS setup
 
-@app.route('/api/calculate', methods=['POST'])
+@app.route('/api/calculate', methods=['POST', 'OPTIONS'])
 def calculate_impact():
+    # Handle preflight request
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
+    # Handle actual request
     data = request.json
     latitude = data.get('latitude', 0)
     longitude = data.get('longitude', 0)
     location = Point(latitude, longitude)
     orientation = data.get('orientation', 'SOUTH')
     area = data.get('area', 0)
-    land_use_type = data.get('landUseType', 'reforestation')
+    land_use_type = data.get('landUseType', 'solar')
     
     if land_use_type == 'reforestation':
         result = calculate_reforestation_impact(area, location)
     elif land_use_type == 'solar':  
-
         # Extract all solar parameters with defaults
         result = calculate_solar_impact(
             area_hectares=area / 10000,  # Convert sq meters to hectares
@@ -35,9 +42,9 @@ def calculate_impact():
             simulation_year=data.get('simulation_year', 2022)
         )
     else:
-    	result = {
-    		'error': f'Land use type {land_use_type} not handled'
-    	}    
+        result = {
+            'error': f'Land use type {land_use_type} not handled'
+        }    
     
     return jsonify(result)
 
