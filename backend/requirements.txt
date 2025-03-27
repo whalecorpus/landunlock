@@ -1,9 +1,9 @@
-flask==2.0.1
-werkzeug==2.0.3
-flask-cors==3.0.10
-gunicorn==20.1.0
+flask==3.0.2
+flask-cors==4.0.0
+pvlib==0.10.3
+pandas==2.0.0
+matplotlib==3.7.1
+timezonefinder==6.2.0
 numpy==1.24.3
-pandas==1.5.3
-pvlib==0.12.0
-matplotlib==3.8.2
-timezonefinder==6.4.0
+requests==2.31.0
+python-dotenv==1.0.1
