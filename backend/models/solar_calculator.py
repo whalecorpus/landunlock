@@ -41,8 +41,7 @@ def get_solar_weather_data(latitude, longitude, year):
             # Use PVGIS for rest of world
             weather_data = pvlib.iotools.get_pvgis_tmy(
                 latitude=latitude,
-                longitude=longitude,
-                coerce_year=year
+                longitude=longitude
             )
             
             # Unpack the tuple and ensure datetime index
@@ -324,7 +323,7 @@ def calculate_solar_impact(
         )
 
         
-        
+
         # Calculate PV output
         pv_output = simulate_pv_output(
             solar_weather_timeseries,

@@ -41,6 +41,7 @@ def calculate_impact():
             array_tilt=data.get('array_tilt'), # if not provided, defaults to abs(latitude)
             simulation_year=data.get('simulation_year', 2022)
         )
+        print(result)
     else:
         result = {
             'error': f'Land use type {land_use_type} not handled'

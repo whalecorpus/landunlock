@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { Map, Layers, Sources } from "vue3-openlayers"
 import LocationForm from './components/LocationForm.vue'
+import CalculationResults from './components/CalculationResults.vue'
 
 const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
 const calculationResult = ref(null)
@@ -68,8 +69,9 @@ const handleLocationUpdate = (loc) => {
 
           <!-- Results -->
           <div v-if="calculationResult" class="results">
-            <h3>Calculation Results</h3>
-            <pre>{{ JSON.stringify(calculationResult, null, 2) }}</pre>
+            <CalculationResults 
+              :result="calculationResult"
+            />
           </div>
         </div>
         
