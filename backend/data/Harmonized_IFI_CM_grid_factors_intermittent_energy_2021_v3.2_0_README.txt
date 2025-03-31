@@ -1,0 +1,32 @@
+The IFI Dataset of Default Grid Factors 
+v.3.2
+
+For the solar_calculator.py, the column named "Intermittent Energy (e.g., Solar, Wind, Tidal)" under "Combined Margin Grid Emission Factor, gCO2/kWh" in the 'Dataset' tab.
+was extracted from "Harmonized IFI Default Grid Factors 2021 v3.2 (UNFCC, 2021)" by IFI TWG, 
+downloaded from https://unfccc.int/documents/461676 on 11 March 2025. 
+Below is the description provided in the 'Cover' tab.
+Detailed methods are available in "Methodological Approach for the Common Default Grid Emission Factor Dataset (UNFCC, 2022)", available at https://unfccc.int/documents/228111
+
+
+==================
+
+The IFI Dataset version 3.x
+- The IFI Dataset (Version 3.x) will be used by IFIs as the default basis of their GHG emissions accounting.
+- The IFI Dataset (version 3.0) was published in December 2021.
+- The IFI Dataset (version 3.1) was published in January 2022 with a minor change. The methodology and sources used to derive the default emission factors are detailed under ""AHG-001: Methodological Approach for the Common Default Grid Emission Factor Dataset"". As noted in AHG-001, WEM projections of CO2 emissions from new electricity generation cover 13 large countries and 13 regions that cover the remaining countries. In version 3.0, regression method was applied to all countries, whereas in version 3.1 emission factors provided by the WEO Model are directly used for the 13 countries and regression method was applied to the remaining countries to estimate the Build Margin (BM).
+- The IFI Dataset (version 3.2) was published in April 2022 with minor changes. The errors identified for the emission factors for “EU27” were corrected. Also, the values for ""World"" were added.
+
+The IFI Dataset version 2.x
+In the IFI Dataset (version 2.1), one column each for energy efficiency and electricity consumption were added.
+In the IFI Dataset (version 2.2), a column for Operating Margin (OM) values was added.
+In the IFI Dataset (version 2.3), the column for OM values was revised to read ‘Operating Margin Grid Emission Factor, gCO2/kWh (including for use in PCAF GHG accounting)'.
+In the IFI Dataset (version 2.4), errors identified in GDP/capita or the grid mix for 5 countries from the non-IEA reporting group were corrected.
+
+The IFI Dataset version 1.x
+The IFI (Interim) Dataset of Grid Factors (Version 1.0) was released in July 2016 on the basis of the methodological approaches to GHG Accounting for Emissions from grid-connected RE and EE projects, that were announced by the IFIs at the 21st Conference of the Parties in Paris in December 2015.
+
+Frequency of updates
+The IFI Technical Working Group on GHG Accounting has committed to refine its approaches based on the experience gained and will periodically publish an updated version of the harmonized dataset (e.g. every 2 years) reflecting methodological advances, evolving knowledge, good practice and quality and currentness of data sources."
+
+For queries, please write to IFITWG-Coordinator <IFITWG-Coordinator@unfccc.int>.
+

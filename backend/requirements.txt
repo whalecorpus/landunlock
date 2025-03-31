@@ -7,3 +7,4 @@ timezonefinder==6.2.0
 numpy==1.24.3
 requests==2.31.0
 python-dotenv==1.0.1
+reverse_geocoder==1.5.1

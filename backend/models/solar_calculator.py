@@ -8,6 +8,8 @@ import io
 import base64
 from dotenv import load_dotenv
 import os
+from .country_utils import get_country_name_for_emissions, get_emissions_factor
+from .util import Point
 
 load_dotenv()
 
@@ -17,8 +19,30 @@ class Orientation(Enum):
     SOUTH = 180
     WEST = 270
 
+# Module-level cache variables
+_cec_database = None
+_sandia_database = None
+_cec_inverter_database = None
+_anton_inverter_database = None
+
+# Helper functions
+def _load_databases():
+    """
+    Load PV panel and inverter databases if not already loaded.
+    """
+    global _cec_database, _sandia_database, _cec_inverter_database, _anton_inverter_database
+    
+    if _cec_database is None:
+        _cec_database = pvlib.pvsystem.retrieve_sam('CECMod')
+    if _sandia_database is None:
+        _sandia_database = pvlib.pvsystem.retrieve_sam('SandiaMod')
+    if _cec_inverter_database is None:
+        _cec_inverter_database = pvlib.pvsystem.retrieve_sam('cecinverter')
+    if _anton_inverter_database is None:
+        _anton_inverter_database = pvlib.pvsystem.retrieve_sam('adrinverter')
 
 
+# Main functions
 def get_solar_weather_data(latitude, longitude, year):
     """
     Fetch historical solar weather data from either NREL PSM3 (North America) or PVGIS (rest of world).
@@ -26,11 +50,18 @@ def get_solar_weather_data(latitude, longitude, year):
     Returns:
         tuple: (solar_weather_timeseries, solar_weather_metadata, is_north_america)
     """
+
     # Check if location is roughly in North America
     is_north_america = (-170 <= longitude <= -50) and (15 <= latitude <= 72)
-    api_key=os.environ.get("PVLIB_API_KEY")
-    api_email=os.environ.get("PVLIB_API_EMAIL")
-
+    
+    # Get API credentials
+    api_key = os.environ.get('PVLIB_API_KEY')
+    api_email = os.environ.get('PVLIB_EMAIL')
+    
+    if not api_key or not api_email:
+        print(f"api_key is empty: {api_key is None or api_key == ''}")
+        print(f"api_email is empty: {api_email is None or api_email == ''}")
+        raise ValueError("NREL API credentials for pvlib not found in environment variables. Please check your .env file.")
     try:
         if is_north_america:
             # Use NREL PSM3 for North American locations
@@ -163,34 +194,25 @@ def simulate_pv_output(
     Returns:
         pd.DataFrame: Results including DC and AC output
     """
-    # Try to get panel specifications from both databases
-    cec_database = pvlib.pvsystem.retrieve_sam('CECMod')
-    sandia_database = pvlib.pvsystem.retrieve_sam('SandiaMod')
+   # Load databases if not already loaded
+    _load_databases()
     
     # Check which database contains our panel model
-    if pv_panel_model in cec_database.columns:
-        panel_specs = cec_database[pv_panel_model]
-    elif pv_panel_model in sandia_database.columns:
-        panel_specs = sandia_database[pv_panel_model]
+    if pv_panel_model in _cec_database.columns:
+        panel_specs = _cec_database[pv_panel_model]
+    elif pv_panel_model in _sandia_database.columns:
+        panel_specs = _sandia_database[pv_panel_model]
     else:
         raise ValueError(f"Panel model {pv_panel_model} not found in either CEC or Sandia database")
     
-    # Try to get inverter specifications from both inverter databases
-    cec_inverter_database = pvlib.pvsystem.retrieve_sam('cecinverter')
-    anton_inverter_database = pvlib.pvsystem.retrieve_sam('adrinverter')
-    
     # Check which database contains our inverter model
-    if inverter_model in cec_inverter_database.columns:
-        inverter_specs = cec_inverter_database[inverter_model]
-    elif inverter_model in anton_inverter_database.columns:
-        inverter_specs = anton_inverter_database[inverter_model]
+    if inverter_model in _cec_inverter_database.columns:
+        inverter_specs = _cec_inverter_database[inverter_model]
+    elif inverter_model in _anton_inverter_database.columns:
+        inverter_specs = _anton_inverter_database[inverter_model]
     else:
         raise ValueError(f"Inverter model {inverter_model} not found in either CEC or Anton Driesse inverter database")
-    
 
-    
-    # Calculate power at STC
-    power_stc = panel_specs['Impo'] * panel_specs['Vmpo']
 
 
     # Calculate solar position
@@ -280,15 +302,14 @@ def calculate_solar_impact(
     location,  # Changed from separate lat/long to Point object
     altitude_meters=10,
     orientation="SOUTH",  
-    #pv_system_capacity_watts=5000, # these params were in the homework, but don't make sense when we're considering a large area
-    #pv_panel_capacity_watts=220,
     pv_panel_model="Canadian_Solar_CS5P_220M___2009_",
     pv_panel_width = 1, # estimates for residential panels; use 1mx2m for commercial
     pv_panel_height = 1.7,
     inverter_model="ABB__MICRO_0_25_I_OUTD_US_208__208V_",
     array_tilt=None,  # Will be set to abs(latitude) if None
     simulation_year=2022,
-    spacing_factor=1.1  # Multiplier for panel area to account for spacing (default 10% spacing)
+    spacing_factor=1.1,  # Multiplier for panel area to account for spacing (default 10% spacing)
+    use_country_EFs=True # set to False if country-level calculations take too long
 ):
     """
     Calculate the energy production and carbon offset from solar panels.
@@ -317,7 +338,7 @@ def calculate_solar_impact(
     area_m2 = area_hectares * 10000
     number_of_panels = int(area_m2 / panel_area_m2)
     
-    # Calculate number of panels based on system capacity (this was how num_panels was calculated in the homework)
+    # Calculate number of panels based on system capacity
     # capacity_based_panels = pv_system_capacity_watts / pv_panel_capacity_watts
 
 
@@ -350,9 +371,19 @@ def calculate_solar_impact(
         # Calculate annual energy production (MWh)
         annual_dc_energy = pv_output["DC Output (Wh)"].sum() / 1_000_000  # Convert to MWh
         annual_ac_energy = pv_output["AC Output (Wh)"].sum() / 1_000_000  # Convert to MWh
-        
-        # Assuming average grid carbon intensity of 0.5 tons CO2e per MWh
-        carbon_offset = annual_ac_energy * 0.5
+e
+        if use_country_EFs:
+            # calculate offset based on grid emissions factors for the respective country
+            annual_energy_kWh = pv_output["AC Output (Wh)"].sum() / 1000 # Convert to kWh
+            country_name = get_country_name_for_emissions(latitude, longitude)
+            emissions_factor = get_emissions_factor(country_name) # this value is in gCO2e/kWh
+            # Calculate carbon offset (metric tons CO2e). 1 metric ton CO2e is ~ equivalent to 1 translatlantic (NYC to London) flight.
+            carbon_offset = (annual_energy_kWh * emissions_factor) / 1_000_000 # Convert from g to metric tons
+        else:
+            # Assuming average grid carbon intensity of 0.5 tons CO2e per MWh
+            carbon_offset = annual_ac_energy * 0.5
+            country_name = "NA"
+            emissions_factor = "NA"
         
         return {
             'landUseType': 'solar',
@@ -376,8 +407,10 @@ def calculate_solar_impact(
                 #'plot': weather_plot_base64
             },
             'energyProduction': annual_ac_energy,
-                #'energyPlot': ac_output_plot_base64
-            'carbonOffset': carbon_offset
+            #'energyPlot': ac_output_plot_base64
+            'carbonOffset': carbon_offset,
+            'country': country_name,
+            'gridEmissionsFactor': emissions_factor
         }
     except Exception as e:
         raise Exception(f"Failed to calculate solar impact: {str(e)}")

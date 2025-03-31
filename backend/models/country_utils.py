@@ -1,0 +1,240 @@
+import reverse_geocoder as rg
+_emissions_factors = None  # Module-level cache
+
+def _load_emissions_factors():
+    """
+    Load grid emissions factors from the data file.
+    Returns a dictionary mapping country names to their emissions factors (gCO2/kWh).
+    """
+    from pathlib import Path
+    
+    # Create the path to EFs data file, relative to backend directory
+    data_file = Path(__file__).parent.parent / 'data' / 'Harmonized_IFI_CM_grid_factors_intermittent_energy_2021_v3.2_0'
+
+
+    emissions_factors = {}
+    with open(data_file, 'r') as f:
+        next(f)  # Skip header
+        for line in f:
+            country, factor = line.strip().split('\t')
+            emissions_factors[country] = float(factor)
+    
+    return emissions_factors
+
+def get_emissions_factor(country_name):
+    """
+    Get emissions factor for a country, loading from file if not already cached.
+    """
+    global _emissions_factors
+    if _emissions_factors is None:
+        _emissions_factors = _load_emissions_factors()
+    return _emissions_factors.get(country_name)
+
+# Mapping from ISO 2-letter codes to emissions factor data file country names
+COUNTRY_MAPPING = {
+    'AF': 'Afghanistan',
+    'AL': 'Albania',
+    'DZ': 'Algeria',
+    'AD': 'Andorra',
+    'AO': 'Angola',
+    'AG': 'Antigua and Barbuda',
+    'AR': 'Argentina',
+    'AM': 'Armenia',
+    'AU': 'Australia',
+    'AT': 'Austria',
+    'AZ': 'Azerbaijan',
+    'BS': 'Bahamas',
+    'BH': 'Bahrain',
+    'BD': 'Bangladesh',
+    'BB': 'Barbados',
+    'BY': 'Belarus',
+    'BE': 'Belgium',
+    'BZ': 'Belize',
+    'BJ': 'Benin',
+    'BT': 'Bhutan',
+    'BO': 'Bolivia, Plurinational State of',
+    'BA': 'Bosnia and Herzegovina',
+    'BW': 'Botswana',
+    'BR': 'Brazil',
+    'BN': 'Brunei Darussalam',
+    'BG': 'Bulgaria',
+    'BF': 'Burkina Faso',
+    'BI': 'Burundi',
+    'KH': 'Cambodia',
+    'CM': 'Cameroon',
+    'CA': 'Canada',
+    'CV': 'Cape Verde',
+    'CF': 'Central African Republic',
+    'TD': 'Chad',
+    'CL': 'Chile',
+    'CN': 'China (PRC and Hong Kong)',
+    'CO': 'Colombia',
+    'KM': 'Comoros',
+    'CG': 'Congo, Republic of',
+    'CD': 'Congo, Democratic Republic of',
+    'CR': 'Costa Rica',
+    'CI': "CÃ´te d'Ivoire",
+    'HR': 'Croatia',
+    'CU': 'Cuba',
+    'CY': 'Cyprus',
+    'CZ': 'Czech Republic',
+    'DK': 'Denmark',
+    'DJ': 'Djibouti',
+    'DM': 'Dominica',
+    'DO': 'Dominican Republic',
+    'EC': 'Ecuador',
+    'EG': 'Egypt',
+    'SV': 'El Salvador',
+    'GQ': 'Equatorial Guinea',
+    'ER': 'Eritrea',
+    'EE': 'Estonia',
+    'ET': 'Ethiopia',
+    'FJ': 'Fiji',
+    'FI': 'Finland',
+    'FR': 'France',
+    'GA': 'Gabon',
+    'GM': 'Gambia',
+    'GE': 'Georgia',
+    'DE': 'Germany',
+    'GH': 'Ghana',
+    'GR': 'Greece',
+    'GD': 'Grenada',
+    'GT': 'Guatemala',
+    'GN': 'Guinea',
+    'GW': 'Guinea-Bissau',
+    'GY': 'Guyana',
+    'HT': 'Haiti',
+    'HN': 'Honduras',
+    'HU': 'Hungary',
+    'IS': 'Iceland',
+    'IN': 'India',
+    'ID': 'Indonesia',
+    'IR': 'Iran, Islamic Republic of',
+    'IQ': 'Iraq',
+    'IE': 'Ireland',
+    'IL': 'Israel',
+    'IT': 'Italy',
+    'JM': 'Jamaica',
+    'JP': 'Japan',
+    'JO': 'Jordan',
+    'KZ': 'Kazakhstan',
+    'KE': 'Kenya',
+    'KI': 'Kiribati',
+    'KP': 'Korea (North), Democratic People\'s Republic of',
+    'KR': 'Korea (South), Republic of',
+    'KW': 'Kuwait',
+    'KG': 'Kyrgyzstan',
+    'LA': 'Lao People\'s Democratic Republic',
+    'LV': 'Latvia',
+    'LB': 'Lebanon',
+    'LS': 'Lesotho',
+    'LR': 'Liberia',
+    'LY': 'Libya',
+    'LI': 'Liechtenstein',
+    'LT': 'Lithuania',
+    'LU': 'Luxembourg',
+    'MG': 'Madagascar',
+    'MW': 'Malawi',
+    'MY': 'Malaysia',
+    'MV': 'Maldives',
+    'ML': 'Mali',
+    'MT': 'Malta',
+    'MH': 'Marshall Islands',
+    'MR': 'Mauritania',
+    'MU': 'Mauritius',
+    'MX': 'Mexico',
+    'FM': 'Micronesia',
+    'MD': 'Moldova, Republic of',
+    'MC': 'Monaco',
+    'MN': 'Mongolia',
+    'ME': 'Montenegro',
+    'MA': 'Morocco',
+    'MZ': 'Mozambique',
+    'MM': 'Myanmar',
+    'NA': 'Namibia',
+    'NR': 'Nauru',
+    'NP': 'Nepal',
+    'NL': 'Netherlands',
+    'NZ': 'New Zealand',
+    'NI': 'Nicaragua',
+    'NE': 'Niger',
+    'NG': 'Nigeria',
+    'MK': 'North Macedonia, Republic of',
+    'NO': 'Norway',
+    'OM': 'Oman',
+    'PK': 'Pakistan',
+    'PW': 'Palau',
+    'PS': 'Palestinian Authority',
+    'PA': 'Panama',
+    'PG': 'Papua New Guinea',
+    'PY': 'Paraguay',
+    'PE': 'Peru',
+    'PH': 'Philippines',
+    'PL': 'Poland',
+    'PT': 'Portugal',
+    'QA': 'Qatar',
+    'RO': 'Romania',
+    'RU': 'Russian Federation',
+    'RW': 'Rwanda',
+    'KN': 'Saint Kitts and Nevis',
+    'LC': 'Saint Lucia',
+    'VC': 'Saint Vincent and Grenadines',
+    'WS': 'Samoa',
+    'SM': 'San Marino',
+    'ST': 'Sao TomÃ© & Principe',
+    'SA': 'Saudi Arabia',
+    'SN': 'Senegal',
+    'RS': 'Serbia',
+    'SC': 'Seychelles',
+    'SL': 'Sierra Leone',
+    'SG': 'Singapore',
+    'SK': 'Slovak Republic',
+    'SI': 'Slovenia',
+    'SB': 'Solomon Islands',
+    'SO': 'Somalia',
+    'ZA': 'South Africa',
+    'SS': 'South Sudan',
+    'ES': 'Spain',
+    'LK': 'Sri Lanka',
+    'SD': 'Sudan',
+    'SR': 'Suriname',
+    'SE': 'Sweden',
+    'CH': 'Switzerland',
+    'SY': 'Syrian Arab Republic',
+    'TW': 'Taiwan (Chinese Taipei)',
+    'TJ': 'Tajikistan',
+    'TZ': 'Tanzania, United Republic of',
+    'TH': 'Thailand',
+    'TL': 'Timor-Leste',
+    'TG': 'Togo',
+    'TO': 'Tonga',
+    'TT': 'Trinidad and Tobago',
+    'TN': 'Tunisia',
+    'TR': 'Turkey',
+    'TM': 'Turkmenistan',
+    'TV': 'Tuvalu',
+    'UG': 'Uganda',
+    'UA': 'Ukraine',
+    'AE': 'United Arab Emirates',
+    'GB': 'United Kingdom',
+    'US': 'United States',
+    'UY': 'Uruguay',
+    'UZ': 'Uzbekistan',
+    'VU': 'Vanatu',
+    'VE': 'Venezuela, Bolivarian Republic of',
+    'VN': 'Viet Nam',
+    'YE': 'Yemen',
+    'ZM': 'Zambia',
+    'ZW': 'Zimbabwe'
+}
+
+
+def get_country_name_for_emissions(latitude, longitude):
+    """
+    Get the country name as it appears in the emissions data file
+    from coordinates
+    """
+    coordinates = (latitude, longitude)
+    result = rg.search(coordinates)
+    iso_code = result[0]['cc']
+    return COUNTRY_MAPPING.get(iso_code)
