@@ -18,7 +18,7 @@ A tool for comparing the carbon impact of different land use choices, specifical
 4. Start the development server: `npm run dev`
 
 ### Backend Setup
-Add a `.env` file to your `backend` directory with the following form:
+Add a `.env` file to your `backend` directory with the following form. Get your API key from: https://developer.nrel.gov/signup/
 ```
 PVLIB_API_KEY=
 PVLIB_API_EMAIL=

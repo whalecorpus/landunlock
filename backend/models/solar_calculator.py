@@ -371,7 +371,7 @@ def calculate_solar_impact(
         # Calculate annual energy production (MWh)
         annual_dc_energy = pv_output["DC Output (Wh)"].sum() / 1_000_000  # Convert to MWh
         annual_ac_energy = pv_output["AC Output (Wh)"].sum() / 1_000_000  # Convert to MWh
-e
+
         if use_country_EFs:
             # calculate offset based on grid emissions factors for the respective country
             annual_energy_kWh = pv_output["AC Output (Wh)"].sum() / 1000 # Convert to kWh
