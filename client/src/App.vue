@@ -12,9 +12,11 @@ const error = ref(null)
 const calculatePotential = async (loc) => {
   isLoading.value = true
   error.value = null
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
   
   try {
-    const response = await fetch('http://localhost:5000/api/calculate', {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
