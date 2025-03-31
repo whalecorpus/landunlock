@@ -3,10 +3,10 @@ from flask_cors import CORS
 from models.util import Point
 from models.solar_calculator import calculate_solar_impact
 from models.reforestation_calculator import calculate_reforestation_impact
-import sys
+import os
 
 app = Flask(__name__)
-CORS(app)  # Basic CORS setup
+CORS(app)
 
 @app.route('/api/calculate', methods=['POST', 'OPTIONS'])
 def calculate_impact():
@@ -49,5 +49,10 @@ def calculate_impact():
     
     return jsonify(result)
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 3000))
+    app.run(host='0.0.0.0', port=port, debug=True)

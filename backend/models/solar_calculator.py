@@ -6,6 +6,10 @@ import matplotlib.dates as mdates
 from timezonefinder import TimezoneFinder
 import io
 import base64
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class Orientation(Enum):
     NORTH = 0
@@ -24,7 +28,9 @@ def get_solar_weather_data(latitude, longitude, year):
     """
     # Check if location is roughly in North America
     is_north_america = (-170 <= longitude <= -50) and (15 <= latitude <= 72)
-    
+    api_key=os.environ.get("PVLIB_API_KEY")
+    api_email=os.environ.get("PVLIB_API_EMAIL")
+
     try:
         if is_north_america:
             # Use NREL PSM3 for North American locations
@@ -32,8 +38,8 @@ def get_solar_weather_data(latitude, longitude, year):
                 latitude=latitude,
                 longitude=longitude,
                 names=year,
-                api_key="q5fLNXiHGb5MkcKQQI19aIfG7qlvXZ0hfITOsuNh", # move these to an environment variable
-                email="aarathi.sugathan@gmail.com",
+                api_key=api_key,
+                email=api_email,
                 map_variables=True,
                 leap_day=True,
             )
