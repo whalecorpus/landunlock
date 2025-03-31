@@ -18,6 +18,15 @@ A tool for comparing the carbon impact of different land use choices, specifical
 4. Start the development server: `npm run dev`
 
 ### Backend Setup
+Add a `.env` file to your `backend` directory with the following form:
+```
+PVLIB_API_KEY=
+PVLIB_API_EMAIL=
+PORT=3000
+CORS_ORIGIN=http://localhost:[FRONTEND_PORT]
+```
+
+To get the app running!
 1. `cd backend`
 2.
 ```
@@ -31,7 +40,7 @@ source venv/bin/activate
 
 ## Usage
 
-1. Open your browser and navigate to `http://localhost:3000`
+1. Open your browser and navigate to `http://localhost:[FRONTEND_PORT]`
 2. Use the map to select an area of land
 3. Choose between reforestation or solar panels
 4. View the calculated carbon impact
