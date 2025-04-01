@@ -5,9 +5,9 @@ import { getArea } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 
-const latitude = ref(-73.4540)
-const longitude = ref(41.3948)
-const center = computed(() => [latitude.value, longitude.value] )
+const latitude = ref(41.3948)
+const longitude = ref(-73.4540)
+const center = computed(() => [longitude.value, latitude.value] )
 const projection = 'EPSG:4326'
 const calculationResult = ref(null)
 const isLoading = ref(false)
@@ -84,8 +84,8 @@ const handleDrawEnd = (event) => {
 }
 
 const handleCenterChange = (event) => {
-    latitude.value = event.target.getCenter()[0];
-    longitude.value = event.target.getCenter()[1];
+    longitude.value = event.target.getCenter()[0];
+    latitude.value = event.target.getCenter()[1];
 }
 
 </script>
@@ -140,7 +140,7 @@ const handleCenterChange = (event) => {
             style="width: 800px; height: 600px;">
             <Map.OlView
                 :center="center"
-                :zoom="15"
+                :zoom="17"
                 :projection="projection"
                 @change:center="handleCenterChange"
                 />
