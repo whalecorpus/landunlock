@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Map, Layers, Sources } from "vue3-openlayers"
+import { Map, Layers, Sources, Interactions } from "vue3-openlayers"
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 
@@ -8,6 +8,8 @@ const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
 const calculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
+const drawEnabled = ref(false)
+const selectedArea = ref(null)
 
 const calculatePotential = async (loc) => {
   isLoading.value = true
@@ -24,7 +26,7 @@ const calculatePotential = async (loc) => {
       body: JSON.stringify({
         latitude: loc.latitude,
         longitude: loc.longitude,
-        area: 1000 // Default 1000 sq meters for now
+        area: selectedArea.value || 1000 // Use selected area if available, otherwise default
       })
     })
 
@@ -46,6 +48,31 @@ const handleLocationUpdate = (loc) => {
   center.value = [loc.longitude, loc.latitude]
   calculatePotential(loc)
 }
+
+const toggleDraw = () => {
+  drawEnabled.value = !drawEnabled.value
+}
+
+const handleDrawEnd = (event) => {
+  // Get the feature that was drawn
+  const feature = event.feature
+  
+  // Get the geometry and calculate area (in square meters)
+  const geometry = feature.getGeometry()
+  const area = geometry.getArea()
+  console.log('hello', area, geometry)
+  
+  // Update the selected area (convert to hectares as that's what the backend expects)
+  selectedArea.value = area / 10000
+  
+  // Recalculate with the new area
+  if (center.value) {
+    calculatePotential({
+      latitude: center.value[1],
+      longitude: center.value[0]
+    })
+  }
+}
 </script>
 
 <template>
@@ -58,6 +85,18 @@ const handleLocationUpdate = (loc) => {
       <div class="content">
         <div class="sidebar">
           <LocationForm @update-location="handleLocationUpdate" />
+          
+          <div class="drawing-controls">
+            <button @click="toggleDraw" class="draw-button">
+              {{ drawEnabled ? 'Disable Drawing' : 'Draw Area' }}
+            </button>
+            <p v-if="selectedArea" class="area-info">
+              Selected area: {{ (selectedArea * 10000).toFixed(0) }} sq meters ({{ selectedArea.toFixed(2) }} hectares)
+            </p>
+            <p v-if="drawEnabled" class="drawing-instructions">
+              Click on the map to start drawing a polygon. Click each vertex position and double-click to finish.
+            </p>
+          </div>
           
           <!-- Loading state -->
           <div v-if="isLoading" class="status-message loading">
@@ -83,6 +122,19 @@ const handleLocationUpdate = (loc) => {
             <Layers.OlTileLayer>
               <Sources.OlSourceOsm />
             </Layers.OlTileLayer>
+            
+            <!-- Vector layer for drawn features -->
+            <Layers.OlVectorLayer>
+              <Sources.OlSourceVector>
+                <!-- Draw interaction -->
+                <Interactions.OlInteractionDraw
+                  v-if="drawEnabled"
+                  type="Polygon"
+                  @drawend="handleDrawEnd"
+                >
+                </Interactions.OlInteractionDraw>
+              </Sources.OlSourceVector>
+            </Layers.OlVectorLayer>
           </Map.OlMap>
         </div>
       </div>
@@ -164,6 +216,41 @@ h1 {
   word-break: break-all;
   margin: 0;
   font-size: 0.9rem;
+}
+
+.drawing-controls {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.draw-button {
+  width: 100%;
+  padding: 0.5rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.draw-button:hover {
+  background: #45a049;
+}
+
+.area-info {
+  margin-top: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.drawing-instructions {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {
