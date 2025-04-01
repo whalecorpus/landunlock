@@ -63,8 +63,8 @@ const handleDrawEnd = (event) => {
   const geometry = feature.getGeometry()
   const area = getArea(geometry, {projection: projection})
   
-  // Update the selected area (convert to hectares as that's what the backend expects)
-  selectedArea.value = area
+  selectedArea.value = area / 1000 // area claims to be in sq meters, but... it's not?
+  console.log('selected area', selectedArea.value)
   
   // Recalculate with the new area
   if (center.value) {
