@@ -4,6 +4,7 @@ from models.util import Point
 from models.solar_calculator import calculate_solar_impact
 from models.reforestation_calculator import calculate_reforestation_impact
 import os
+import requests
 
 app = Flask(__name__)
 CORS(app)
@@ -20,11 +21,25 @@ def calculate_impact():
 
     # Handle actual request
     data = request.json
+
     latitude = data.get('latitude', 0)
     longitude = data.get('longitude', 0)
+    address = data.get('address', None)
+
+    if (not latitude and not longitude and address):
+        print("getting lat/lon for address")
+
+        address = address.replace(" ", "+")
+        geocode_api_key = os.environ.get('GEOCODE_MAPS_API_KEY')
+        payload = { 'q': address, 'api_key': geocode_api_key  }
+        url = 'https://geocode.maps.co/search'
+        r = requests.get(url, params=payload)
+        r.raise_for_status()
+
+        latitude = float(r.json()[0]['lat'])
+        longitude = float(r.json()[0]['lon'])
+
     location = Point(latitude, longitude)
-    print(f'latitude {latitude}')
-    print(f'longitude {longitude}')
     orientation = data.get('orientation', 'SOUTH')
     if(latitude < 0):
         orientation = 'NORTH'

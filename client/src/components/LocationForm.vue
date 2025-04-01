@@ -2,6 +2,15 @@
 <template>
     <form @submit.prevent="handleSubmit" class="location-form">
       <div class="form-group">
+          <label for="Address">Address</label>
+          <input
+            type="string"
+            id="address"
+            v-model="address"
+          />
+      </div>
+
+      <div class="form-group">
         <label for="latitude">Latitude:</label>
         <input 
           type="number" 
@@ -36,6 +45,8 @@
   const longitude = defineModel('longitude');
   
   const handleSubmit = () => {
+    // geocodeAddress(address.value);
+    
     emit('update-location', {
       latitude: parseFloat(latitude.value),
       longitude: parseFloat(longitude.value)
