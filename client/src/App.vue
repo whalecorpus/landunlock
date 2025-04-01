@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Map, Layers, Sources, Interactions } from "vue3-openlayers"
+import { Map, Layers, Sources, Interactions, MapControls } from "vue3-openlayers"
 import { getArea } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
@@ -56,6 +56,7 @@ const toggleDraw = () => {
 }
 
 const handleDrawEnd = (event) => {
+  drawEnabled.value = false;
   const feature = event.feature
   
   // Get the geometry and calculate area (in square meters)
@@ -89,7 +90,7 @@ const handleDrawEnd = (event) => {
           
           <div class="drawing-controls">
             <button @click="toggleDraw" class="draw-button">
-              {{ drawEnabled ? 'Disable Drawing' : 'Draw Area' }}
+              {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
             </button>
             <p v-if="selectedArea" class="area-info">
               Selected area: {{ (selectedArea * 10000).toFixed(0) }} sq meters ({{ selectedArea.toFixed(2) }} hectares)
@@ -136,6 +137,7 @@ const handleDrawEnd = (event) => {
                 </Interactions.OlInteractionDraw>
               </Sources.OlSourceVector>
             </Layers.OlVectorLayer>
+            <MapControls.OlScalelineControl :bar="showAsBar"/>
           </Map.OlMap>
         </div>
       </div>
