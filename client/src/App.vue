@@ -1,10 +1,12 @@
 <script setup>
 import { ref } from 'vue'
 import { Map, Layers, Sources, Interactions } from "vue3-openlayers"
+import { getArea } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 
 const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
+const projection = 'EPSG:4326'
 const calculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
@@ -54,23 +56,22 @@ const toggleDraw = () => {
 }
 
 const handleDrawEnd = (event) => {
-  // Get the feature that was drawn
   const feature = event.feature
   
   // Get the geometry and calculate area (in square meters)
   const geometry = feature.getGeometry()
-  const area = geometry.getArea()
-  console.log('hello', area, geometry)
+  const area = getArea(geometry, {projection: projection})
   
   // Update the selected area (convert to hectares as that's what the backend expects)
-  selectedArea.value = area / 10000
+  selectedArea.value = area
   
   // Recalculate with the new area
   if (center.value) {
-    calculatePotential({
-      latitude: center.value[1],
-      longitude: center.value[0]
-    })
+    console.log('would have calculated potential at', center.value)
+    // calculatePotential({
+    //   latitude: center.value[1],
+    //   longitude: center.value[0]
+    // })
   }
 }
 </script>
@@ -118,7 +119,7 @@ const handleDrawEnd = (event) => {
         
         <div class="map-container">
           <Map.OlMap style="width: 800px; height: 600px;">
-            <Map.OlView :center="center" :zoom="15" projection="EPSG:4326" />
+            <Map.OlView :center="center" :zoom="15" :projection="projection" />
             <Layers.OlTileLayer>
               <Sources.OlSourceOsm />
             </Layers.OlTileLayer>
