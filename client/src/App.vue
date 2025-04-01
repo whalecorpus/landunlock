@@ -17,7 +17,7 @@ const calculatePotential = async (loc) => {
   isLoading.value = true
   error.value = null
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
+  const apiUrl = import.meta.env.VITE_API_URL || '/api/calculate'
   
   try {
     const response = await fetch(apiUrl, {
