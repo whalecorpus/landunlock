@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Map, Layers, Sources, Interactions, MapControls } from "vue3-openlayers"
 import { getArea } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 
-const center = ref([-73.4540, 41.3948]) // Danbury, CT coordinates
+const latitude = ref(-73.4540)
+const longitude = ref(41.3948)
+const center = computed(() => [latitude.value, longitude.value] )
 const projection = 'EPSG:4326'
 const calculationResult = ref(null)
 const isLoading = ref(false)
@@ -20,6 +22,7 @@ const calculatePotential = async (loc) => {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
   
   try {
+    console.log("fetch", loc)
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -47,7 +50,11 @@ const calculatePotential = async (loc) => {
 }
 
 const handleLocationUpdate = (loc) => {
-  center.value = [loc.longitude, loc.latitude]
+  // console.log(loc, loc.latitude, loc.longitude)
+  console.log(loc);
+  console.log("lat", loc.latitude); console.log("long", loc.longitude)
+  latitude.value = loc.latitude
+  longitude.value = loc.longitude
   calculatePotential(loc)
 }
 
@@ -75,6 +82,12 @@ const handleDrawEnd = (event) => {
     // })
   }
 }
+
+const handleCenterChange = (event) => {
+    latitude.value = event.target.getCenter()[0];
+    longitude.value = event.target.getCenter()[1];
+}
+
 </script>
 
 <template>
@@ -86,7 +99,11 @@ const handleDrawEnd = (event) => {
     <main>
       <div class="content">
         <div class="sidebar">
-          <LocationForm @update-location="handleLocationUpdate" />
+          <LocationForm
+            @update-location="handleLocationUpdate"
+            v-model:latitude="latitude"
+            v-model:longitude="longitude"
+          />
           
           <div class="drawing-controls">
             <button @click="toggleDraw" class="draw-button">
@@ -119,8 +136,14 @@ const handleDrawEnd = (event) => {
         </div>
         
         <div class="map-container">
-          <Map.OlMap style="width: 800px; height: 600px;">
-            <Map.OlView :center="center" :zoom="15" :projection="projection" />
+          <Map.OlMap
+            style="width: 800px; height: 600px;">
+            <Map.OlView
+                :center="center"
+                :zoom="15"
+                :projection="projection"
+                @change:center="handleCenterChange"
+                />
             <Layers.OlTileLayer>
               <Sources.OlSourceOsm />
             </Layers.OlTileLayer>
@@ -137,7 +160,7 @@ const handleDrawEnd = (event) => {
                 </Interactions.OlInteractionDraw>
               </Sources.OlSourceVector>
             </Layers.OlVectorLayer>
-            <MapControls.OlScalelineControl :bar="showAsBar"/>
+            <MapControls.OlScalelineControl bar/>
           </Map.OlMap>
         </div>
       </div>

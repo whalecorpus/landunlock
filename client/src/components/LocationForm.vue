@@ -32,10 +32,11 @@
   
   const emit = defineEmits(['update-location'])
   
-  const latitude = ref(41.3948)  // Default to Danbury, CT
-  const longitude = ref(-73.4540)
+  const latitude = defineModel('latitude');
+  const longitude = defineModel('longitude');
   
   const handleSubmit = () => {
+    console.log("handleSubmit", latitude.value, longitude.value);
     emit('update-location', {
       latitude: parseFloat(latitude.value),
       longitude: parseFloat(longitude.value)
