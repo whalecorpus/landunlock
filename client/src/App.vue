@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Map, Layers, Sources, Interactions, MapControls } from "vue3-openlayers"
-import { getArea } from "ol/sphere";
+import { getArea, getDistance  } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 
@@ -15,6 +15,12 @@ const isLoading = ref(false)
 const error = ref(null)
 const drawEnabled = ref(false)
 const selectedArea = ref(null)
+
+// Track API call conditions
+const lastApiCallLocation = ref(null)
+const kWhPerYearPerHectare = ref(45)
+const carbonOffsetPerYearPerHectare = ref(43)
+const kmDiff = ref(20) // Distance in kilometers before making a new API call
 
 const calculatePotential = async (loc) => {
   isLoading.value = true
@@ -31,7 +37,7 @@ const calculatePotential = async (loc) => {
       body: JSON.stringify({
         latitude: loc.latitude,
         longitude: loc.longitude,
-        area: selectedArea.value || 1000 // Use selected area if available, otherwise default
+        area: 10000 // we always want to calculate the potential for one hectare, and we'll calculate their selected area kWh / carbon offset based on that
       })
     })
 
@@ -41,6 +47,14 @@ const calculatePotential = async (loc) => {
 
     const data = await response.json()
     calculationResult.value = data
+    
+    lastApiCallLocation.value = loc
+    kWhPerYearPerHectare.value = data.energyProduction
+    carbonOffsetPerYearPerHectare.value = data.carbonOffset
+    console.log('coefficients updated:', {
+      kWh: kWhPerYearPerHectare.value,
+      carbon: carbonOffsetPerYearPerHectare.value
+    })
   } catch (e) {
     console.error('Calculation error:', e)
     error.value = 'Failed to calculate solar potential. Please try again.'
@@ -52,7 +66,30 @@ const calculatePotential = async (loc) => {
 const handleLocationUpdate = (loc) => {
   latitude.value = loc.latitude
   longitude.value = loc.longitude
-  calculatePotential(loc)
+
+  // If this is our first API call, make it
+  if (!lastApiCallLocation.value) {
+    calculatePotential(loc)
+    return
+  }
+
+  const distance = getDistance(
+    [lastApiCallLocation.value.longitude, lastApiCallLocation.value.latitude],
+    [loc.longitude, loc.latitude]
+  ) / 1000 // Convert meters to kilometers
+  
+  // If we're within the threshold, use the existing coefficients
+  if (distance > kmDiff.value) {
+    calculatePotential(loc)
+  } else {
+    // Use existing coefficients for calculations
+    // Convert selected area to number of 1000 sqm units
+    // const areaInHectares = selectedArea.value / 10 // Convert to hectares
+    // calculationResult.value = {
+    //   energyProduction: areaInHectares * currentCoefficients.value.kWh,
+    //   carbonOffset: areaInHectares * currentCoefficients.value.carbonOffset
+    // }
+  }
 }
 
 const toggleDraw = () => {
@@ -67,16 +104,18 @@ const handleDrawEnd = (event) => {
   const geometry = feature.getGeometry()
   const area = getArea(geometry, {projection: projection})
   
-  selectedArea.value = area / 1000 // area claims to be in sq meters, but... it's not?
+  selectedArea.value = area
   console.log('selected area', selectedArea.value)
   
-  // Recalculate with the new area
-  if (center.value) {
-    console.log('would have calculated potential at', center.value)
-    // calculatePotential({
-    //   latitude: center.value[1],
-    //   longitude: center.value[0]
-    // })
+  // Update calculations with the new area using current coefficients
+  if (selectedArea.value) {
+    // Convert selected area to number of 1000 sqm units
+    const areaHectares = selectedArea.value / 10000 // Convert to hectares
+    calculationResult.value = {
+      energyProduction: areaHectares * kWhPerYearPerHectare.value,
+      carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
+    }
+    console.log('currentCoefficients', areaHectares * kWhPerYearPerHectare.value, areaHectares * carbonOffsetPerYearPerHectare.value);
   }
 }
 
@@ -108,7 +147,7 @@ const handleCenterChange = (event) => {
               {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
             </button>
             <p v-if="selectedArea" class="area-info">
-              Selected area: {{ (selectedArea * 10000).toFixed(0) }} sq meters ({{ selectedArea.toFixed(2) }} hectares)
+              Selected area: {{ (selectedArea).toFixed(0) }} sq meters ({{ selectedArea.toFixed(2)/ 10000 }} hectares)
             </p>
             <p v-if="drawEnabled" class="drawing-instructions">
               Click on the map to start drawing a polygon. Click each vertex position and double-click to finish.
@@ -128,7 +167,10 @@ const handleCenterChange = (event) => {
           <!-- Results -->
           <div v-if="calculationResult" class="results">
             <CalculationResults 
-              :result="calculationResult"
+              v-if="selectedArea"
+              :area="selectedArea"
+              :kWh-per-year-per-hectare="kWhPerYearPerHectare"
+              :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
             />
           </div>
         </div>
