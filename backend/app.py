@@ -23,6 +23,8 @@ def calculate_impact():
     latitude = data.get('latitude', 0)
     longitude = data.get('longitude', 0)
     location = Point(latitude, longitude)
+    print(f'latitude {latitude}')
+    print(f'longitude {longitude}')
     orientation = data.get('orientation', 'SOUTH')
     area = data.get('area', 0)
     land_use_type = data.get('landUseType', 'solar')
