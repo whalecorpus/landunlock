@@ -1,15 +1,15 @@
 <template>
-  <div v-if="result" class="calculation-results">
+  <div v-if="area" class="calculation-results">
     <div class="main-result">
       <p>
-        With your <span class="highlight">{{ formatArea(result.areaHectares * 10000) }}</span> of solar panels,
-        you would produce <span class="highlight">{{ result.energyProduction.toFixed(2) }} MWh</span> per year.
+        With your <span class="highlight">{{ formatArea(area) }}</span> of solar panels,
+        you would produce <span class="highlight">{{ (area / 10000 * MWhPerYearPerHectare).toFixed(2) }} MWh</span> per year.
       </p>
     </div>
 
     <div class="context">
       <p class="carbon-offset">
-        Carbon offset: {{ result.carbonOffset.toFixed(1) }} tons CO₂e per year. <br> <span id="carbon-metaphor">Equivalent to {{ carbonMetaphor(result.carbonOffset) }}. </span>
+        Carbon offset: {{ (area /10000 * carbonOffsetPerYearPerHectare).toFixed(1) }} tons CO₂e per year. <br> <span id="carbon-metaphor">Equivalent to {{ carbonMetaphor(area / 10000 * carbonOffsetPerYearPerHectare) }}. </span>
       </p>
     </div>
   </div>
@@ -17,8 +17,16 @@
 
 <script setup>
 defineProps({
-  result: {
-    type: Object,
+  area: {
+    type: Number,
+    required: true
+  },
+  MWhPerYearPerHectare: {
+    type: Number,
+    required: true
+  },
+  carbonOffsetPerYearPerHectare: {
+    type: Number,
     required: true
   }
 })
@@ -27,14 +35,14 @@ const formatArea = (areaInSqMeters) => {
   if (areaInSqMeters >= 10000) {
     return `${(areaInSqMeters / 10000).toFixed(2)} hectares`
   }
-  return `${areaInSqMeters.toFixed(0)} sq. meters`
+  return `${areaInSqMeters.toFixed(2)} sq. meters`
 }
 
 const carbonMetaphor = (effectiveCarbon) => {
   // Array of carbon equivalencies with their coefficients and descriptions
   const carbonEquivalencies = [
     {
-      verb: 'stopping',
+      verb: 'skipping',
       activity: 'transatlantic flights',
       coefficient: 1, // source: Aarathi :)
     },
