@@ -18,13 +18,27 @@ const selectedArea = ref(null)
 
 // Track API call conditions
 const lastApiCallLocation = ref(null)
-const kWhPerYearPerHectare = ref(45)
-const carbonOffsetPerYearPerHectare = ref(43)
+const kWhPerYearPerHectare = ref(1850)
+const carbonOffsetPerYearPerHectare = ref(650)
 const kmDiff = ref(20) // Distance in kilometers before making a new API call
 
 const calculatePotential = async (loc) => {
   isLoading.value = true
   error.value = null
+
+  // if we have a lastApiCallLocation, we need to check if the new location is too close to the last one
+  if (lastApiCallLocation.value) {
+    const distance = getDistance(
+      [lastApiCallLocation.value.longitude, lastApiCallLocation.value.latitude],
+      [loc.longitude, loc.latitude]
+    ) / 1000 // Convert meters to kilometers
+    
+    if (distance < kmDiff.value) {
+      console.log('not recalculating because distance is too short', distance);
+      return
+    }
+  }
+
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
   
@@ -66,30 +80,7 @@ const calculatePotential = async (loc) => {
 const handleLocationUpdate = (loc) => {
   latitude.value = loc.latitude
   longitude.value = loc.longitude
-
-  // If this is our first API call, make it
-  if (!lastApiCallLocation.value) {
-    calculatePotential(loc)
-    return
-  }
-
-  const distance = getDistance(
-    [lastApiCallLocation.value.longitude, lastApiCallLocation.value.latitude],
-    [loc.longitude, loc.latitude]
-  ) / 1000 // Convert meters to kilometers
-  
-  // If we're within the threshold, use the existing coefficients
-  if (distance > kmDiff.value) {
-    calculatePotential(loc)
-  } else {
-    // Use existing coefficients for calculations
-    // Convert selected area to number of 1000 sqm units
-    // const areaInHectares = selectedArea.value / 10 // Convert to hectares
-    // calculationResult.value = {
-    //   energyProduction: areaInHectares * currentCoefficients.value.kWh,
-    //   carbonOffset: areaInHectares * currentCoefficients.value.carbonOffset
-    // }
-  }
+  calculatePotential(loc)
 }
 
 const toggleDraw = () => {
@@ -115,7 +106,6 @@ const handleDrawEnd = (event) => {
       energyProduction: areaHectares * kWhPerYearPerHectare.value,
       carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
     }
-    console.log('currentCoefficients', areaHectares * kWhPerYearPerHectare.value, areaHectares * carbonOffsetPerYearPerHectare.value);
   }
 }
 
@@ -123,6 +113,7 @@ const handleCenterChange = (event) => {
     longitude.value = event.target.getCenter()[0];
     latitude.value = event.target.getCenter()[1];
     zoom.value = event.target.getZoom();
+    console.log('current coefficients', kWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
 }
 
 </script>
@@ -143,11 +134,11 @@ const handleCenterChange = (event) => {
           />
           
           <div class="drawing-controls">
-            <button @click="toggleDraw" class="draw-button">
+          <button @click="toggleDraw" class="draw-button">
               {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
             </button>
             <p v-if="selectedArea" class="area-info">
-              Selected area: {{ (selectedArea).toFixed(0) }} sq meters ({{ selectedArea.toFixed(2)/ 10000 }} hectares)
+              Selected area: {{ (selectedArea).toFixed(0) }} sq meters ({{ (selectedArea / 10000).toFixed(2) }} hectares)
             </p>
             <p v-if="drawEnabled" class="drawing-instructions">
               Click on the map to start drawing a polygon. Click each vertex position and double-click to finish.

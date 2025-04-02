@@ -35,14 +35,14 @@ const formatArea = (areaInSqMeters) => {
   if (areaInSqMeters >= 10000) {
     return `${(areaInSqMeters / 10000).toFixed(2)} hectares`
   }
-  return `${areaInSqMeters} sq. meters`
+  return `${areaInSqMeters.toFixed(2)} sq. meters`
 }
 
 const carbonMetaphor = (effectiveCarbon) => {
   // Array of carbon equivalencies with their coefficients and descriptions
   const carbonEquivalencies = [
     {
-      verb: 'stopping',
+      verb: 'skipping',
       activity: 'transatlantic flights',
       coefficient: 1, // source: Aarathi :)
     },
