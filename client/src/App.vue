@@ -18,9 +18,9 @@ const selectedArea = ref(null)
 
 // Track API call conditions
 const lastApiCallLocation = ref(null)
-const kWhPerYearPerHectare = ref(1850)
+const MWhPerYearPerHectare = ref(1850)
 const carbonOffsetPerYearPerHectare = ref(650)
-const kmDiff = ref(20) // Distance in kilometers before making a new API call
+const kmDiff = ref(50) // Distance in kilometers before making a new API call
 
 const calculatePotential = async (loc) => {
   isLoading.value = true
@@ -63,10 +63,10 @@ const calculatePotential = async (loc) => {
     calculationResult.value = data
     
     lastApiCallLocation.value = loc
-    kWhPerYearPerHectare.value = data.energyProduction
+    MWhPerYearPerHectare.value = data.energyProduction
     carbonOffsetPerYearPerHectare.value = data.carbonOffset
     console.log('coefficients updated:', {
-      kWh: kWhPerYearPerHectare.value,
+      kWh: MWhPerYearPerHectare.value,
       carbon: carbonOffsetPerYearPerHectare.value
     })
   } catch (e) {
@@ -103,7 +103,7 @@ const handleDrawEnd = (event) => {
     // Convert selected area to number of 1000 sqm units
     const areaHectares = selectedArea.value / 10000 // Convert to hectares
     calculationResult.value = {
-      energyProduction: areaHectares * kWhPerYearPerHectare.value,
+      energyProduction: areaHectares * MWhPerYearPerHectare.value,
       carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
     }
   }
@@ -113,7 +113,7 @@ const handleCenterChange = (event) => {
     longitude.value = event.target.getCenter()[0];
     latitude.value = event.target.getCenter()[1];
     zoom.value = event.target.getZoom();
-    console.log('current coefficients', kWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
+    console.log('current coefficients', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
 }
 
 </script>
@@ -160,7 +160,7 @@ const handleCenterChange = (event) => {
             <CalculationResults 
               v-if="selectedArea"
               :area="selectedArea"
-              :kWh-per-year-per-hectare="kWhPerYearPerHectare"
+              :kWh-per-year-per-hectare="MWhPerYearPerHectare"
               :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
             />
           </div>

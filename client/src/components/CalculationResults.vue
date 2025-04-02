@@ -3,7 +3,7 @@
     <div class="main-result">
       <p>
         With your <span class="highlight">{{ formatArea(area) }}</span> of solar panels,
-        you would produce <span class="highlight">{{ (area / 10000 * kWhPerYearPerHectare).toFixed(2) }} MWh</span> per year.
+        you would produce <span class="highlight">{{ (area / 10000 * MWhPerYearPerHectare).toFixed(2) }} MWh</span> per year.
       </p>
     </div>
 
@@ -21,7 +21,7 @@ defineProps({
     type: Number,
     required: true
   },
-  kWhPerYearPerHectare: {
+  MWhPerYearPerHectare: {
     type: Number,
     required: true
   },
