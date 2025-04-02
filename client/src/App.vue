@@ -8,6 +8,7 @@ import CalculationResults from './components/CalculationResults.vue'
 const latitude = ref(41.3948)
 const longitude = ref(-73.4540)
 const center = computed(() => [longitude.value, latitude.value] )
+const zoom = ref(17)
 const projection = 'EPSG:4326'
 const calculationResult = ref(null)
 const isLoading = ref(false)
@@ -22,7 +23,6 @@ const calculatePotential = async (loc) => {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
   
   try {
-    console.log("fetch", loc)
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -50,9 +50,6 @@ const calculatePotential = async (loc) => {
 }
 
 const handleLocationUpdate = (loc) => {
-  // console.log(loc, loc.latitude, loc.longitude)
-  console.log(loc);
-  console.log("lat", loc.latitude); console.log("long", loc.longitude)
   latitude.value = loc.latitude
   longitude.value = loc.longitude
   calculatePotential(loc)
@@ -86,6 +83,7 @@ const handleDrawEnd = (event) => {
 const handleCenterChange = (event) => {
     longitude.value = event.target.getCenter()[0];
     latitude.value = event.target.getCenter()[1];
+    zoom.value = event.target.getZoom();
 }
 
 </script>
@@ -140,7 +138,7 @@ const handleCenterChange = (event) => {
             style="width: 800px; height: 600px;">
             <Map.OlView
                 :center="center"
-                :zoom="17"
+                :zoom="zoom"
                 :projection="projection"
                 @change:center="handleCenterChange"
                 />

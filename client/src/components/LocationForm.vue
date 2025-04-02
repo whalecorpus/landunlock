@@ -36,7 +36,6 @@
   const longitude = defineModel('longitude');
   
   const handleSubmit = () => {
-    console.log("handleSubmit", latitude.value, longitude.value);
     emit('update-location', {
       latitude: parseFloat(latitude.value),
       longitude: parseFloat(longitude.value)
