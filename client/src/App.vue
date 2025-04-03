@@ -24,10 +24,12 @@ const {
   clearPolygons,
   handleCenterChange,
   handleZoomChange,
-  calculatePotential
+  calculateSolarPotential,
+  calculateForestPotential
 } = useMap()
 
-const calculationResult = ref(null)
+const solarCalculationResult = ref(null)
+const forestCalculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
 
@@ -35,7 +37,9 @@ const handleLocationUpdateWithLoading = async (loc) => {
   isLoading.value = true
   error.value = null
   try {
-    calculationResult.value = await calculatePotential(loc)
+    solarCalculationResult.value = await calculateSolarPotential(loc)
+    // forestCalculationResult.value = await calculateForestPotential(loc)
+    await calculateForestPotential(loc)
   } catch (e) {
     error.value = e.message
   } finally {
@@ -46,13 +50,13 @@ const handleLocationUpdateWithLoading = async (loc) => {
 const handleDrawEndWithResults = (area, geometry) => {
   const results = handleDrawEnd(area, geometry)
   if (results) {
-    calculationResult.value = results
+    solarCalculationResult.value = results
   }
 }
 
 const handleClearPolygons = () => {
   clearPolygons()
-  calculationResult.value = null
+  solarCalculationResult.value = null
 }
 </script>
 
@@ -137,7 +141,7 @@ const handleClearPolygons = () => {
           </div>
 
           <!-- Results -->
-          <div v-if="calculationResult && selectedArea" class="results">
+          <div v-if="solarCalculationResult && selectedArea" class="results">
             <CalculationResults 
               :area="selectedArea"
               :MWhPerYearPerHectare="MWhPerYearPerHectare"
