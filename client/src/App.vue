@@ -156,9 +156,9 @@ const handleClearPolygons = () => {
         </div>
 
         <!-- Results panel moved to the right -->
-        <div v-if="solarCalculationResult && selectedArea" class="results-panel">
+        <div v-if="solarCalculationResult && solarPanelArea" class="results-panel">
           <CalculationResults 
-            :area="selectedArea"
+            :area="solarPanelArea"
             :MWhPerYearPerHectare="MWhPerYearPerHectare"
             :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
           />
