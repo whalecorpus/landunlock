@@ -56,7 +56,9 @@ def get_solar_weather_data(latitude, longitude, year):
     
     # Get API credentials
     api_key = os.environ.get('PVLIB_API_KEY')
+    print(api_key)
     api_email = os.environ.get('PVLIB_EMAIL')
+    print(api_email)
     
     if not api_key or not api_email:
         print(f"api_key is empty: {api_key is None or api_key == ''}")
