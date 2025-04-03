@@ -50,7 +50,7 @@ const carbonMetaphor = (effectiveCarbon) => {
       verb: 'planting',
       activity: 'hectares of full-grown mangroves',
       coefficient: 23.1, // tons CO2 per hectare of trees; https://winrock.org/flr-calculator/
-    },
+    }, // this doesn't make sense for reforestation comparison
     {
       verb: 'taking',
       activity: 'cars off the road for one year',
@@ -80,7 +80,7 @@ const carbonMetaphor = (effectiveCarbon) => {
 <style scoped>
 .calculation-results {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

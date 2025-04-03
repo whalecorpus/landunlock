@@ -139,28 +139,30 @@ const handleClearPolygons = () => {
           <div v-if="error" class="status-message error">
             {{ error }}
           </div>
-
-          <!-- Results -->
-          <div v-if="solarCalculationResult && selectedArea" class="results">
-            <CalculationResults 
-              :area="selectedArea"
-              :MWhPerYearPerHectare="MWhPerYearPerHectare"
-              :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
-            />
-          </div>
         </div>
         
-        <MapView
-          v-model:center="center"
-          v-model:zoom="zoom"
-          :draw-enabled="drawEnabled"
-          :land-use-type="landUseType"
-          :polygons="polygons"
-          @draw-end="handleDrawEndWithResults"
-          @clear-polygons="handleClearPolygons"
-          @update:center="handleCenterChange"
-          @update:zoom="handleZoomChange"
-        />
+        <div class="map-container">
+          <MapView
+            v-model:center="center"
+            v-model:zoom="zoom"
+            :draw-enabled="drawEnabled"
+            :land-use-type="landUseType"
+            :polygons="polygons"
+            @draw-end="handleDrawEndWithResults"
+            @clear-polygons="handleClearPolygons"
+            @update:center="handleCenterChange"
+            @update:zoom="handleZoomChange"
+          />
+        </div>
+
+        <!-- Results panel moved to the right -->
+        <div v-if="solarCalculationResult && selectedArea" class="results-panel">
+          <CalculationResults 
+            :area="selectedArea"
+            :MWhPerYearPerHectare="MWhPerYearPerHectare"
+            :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
+          />
+        </div>
       </div>
     </main>
   </div>
@@ -174,20 +176,22 @@ html, body {
 }
 
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   padding: 2rem;
   min-height: 100vh;
 }
 
 header {
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .logo-container {
@@ -207,10 +211,16 @@ h1 {
   font-size: 2.5rem;
 }
 
+main {
+  width: 100%;
+}
+
 .content {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 300px 1fr 300px;
   gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .sidebar {
@@ -354,6 +364,32 @@ h1 {
 
 .about-link:hover {
   background-color: #f5f5f5;
+}
+
+.map-container {
+  position: relative;
+  height: 100%;
+  min-height: 600px;
+}
+
+.results-panel {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .content {
+    grid-template-columns: 300px 1fr;
+  }
+  
+  .results-panel {
+    grid-column: 1 / -1;
+    position: static;
+  }
 }
 
 @media (max-width: 768px) {
