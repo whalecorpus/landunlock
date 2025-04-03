@@ -1,115 +1,48 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { getDistance } from "ol/sphere";
+import { ref } from 'vue'
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
 import MapView from './components/MapView.vue'
+import { useMap } from './composables/useMap'
 
-const latitude = ref(41.3948)
-const longitude = ref(-73.4540)
-const center = computed(() => [longitude.value, latitude.value] )
-const zoom = ref(17)
+const {
+  latitude,
+  longitude,
+  center,
+  zoom,
+  drawEnabled,
+  selectedArea,
+  landUseType,
+  MWhPerYearPerHectare,
+  carbonOffsetPerYearPerHectare,
+  toggleDraw,
+  handleDrawEnd,
+  handleCenterChange,
+  handleZoomChange,
+  calculatePotential
+} = useMap()
+
 const calculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
-const drawEnabled = ref(false)
-const selectedArea = ref(null)
-const landUseType = 'solar'
 
-// Track API call conditions
-const lastApiCallLocation = ref(null)
-const MWhPerYearPerHectare = ref(1850)
-const carbonOffsetPerYearPerHectare = ref(650)
-const kmDiff = ref(50) // Distance in kilometers before making a new API call
-
-const calculatePotential = async (loc) => {
+const handleLocationUpdateWithLoading = async (loc) => {
   isLoading.value = true
   error.value = null
-
-  // if we have a lastApiCallLocation, we need to check if the new location is too close to the last one
-  if (lastApiCallLocation.value) {
-    const distance = getDistance(
-      [lastApiCallLocation.value.longitude, lastApiCallLocation.value.latitude],
-      [loc.longitude, loc.latitude]
-    ) / 1000 // Convert meters to kilometers
-    
-    if (distance < kmDiff.value) {
-      console.log('not recalculating because distance is too short', distance);
-      return
-    }
-  }
-
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
-  
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        area: 10000 // we always want to calculate the potential for one hectare, and we'll calculate their selected area kWh / carbon offset based on that
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    calculationResult.value = data
-    
-    lastApiCallLocation.value = loc
-    MWhPerYearPerHectare.value = data.energyProduction
-    carbonOffsetPerYearPerHectare.value = data.carbonOffset
-    console.log('coefficients updated:', {
-      kWh: MWhPerYearPerHectare.value,
-      carbon: carbonOffsetPerYearPerHectare.value
-    })
+    calculationResult.value = await calculatePotential(loc)
   } catch (e) {
-    console.error('Calculation error:', e)
-    error.value = 'Failed to calculate solar potential. Please try again.'
+    error.value = e.message
   } finally {
     isLoading.value = false
   }
 }
 
-const handleLocationUpdate = (loc) => {
-  latitude.value = loc.latitude
-  longitude.value = loc.longitude
-  calculatePotential(loc)
-}
-
-const toggleDraw = () => {
-  drawEnabled.value = !drawEnabled.value
-}
-
-const handleDrawEnd = (area) => {
-  drawEnabled.value = false
-  selectedArea.value = area
-  console.log('selected area', selectedArea.value)
-  
-  // Update calculations with the new area using current coefficients
-  if (selectedArea.value) {
-    // Convert selected area to number of 1000 sqm units
-    const areaHectares = selectedArea.value / 10000 // Convert to hectares
-    calculationResult.value = {
-      energyProduction: areaHectares * MWhPerYearPerHectare.value,
-      carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
-    }
+const handleDrawEndWithResults = (area) => {
+  const results = handleDrawEnd(area)
+  if (results) {
+    calculationResult.value = results
   }
-}
-
-const handleCenterChange = (newCenter) => {
-  longitude.value = newCenter[0]
-  latitude.value = newCenter[1]
-  console.log('current coefficients', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
-}
-
-const handleZoomChange = (newZoom) => {
-  zoom.value = newZoom
 }
 </script>
 
@@ -129,7 +62,7 @@ const handleZoomChange = (newZoom) => {
       <div class="content">
         <div class="sidebar">
           <LocationForm
-            @update-location="handleLocationUpdate"
+            @update-location="handleLocationUpdateWithLoading"
             v-model:latitude="latitude"
             v-model:longitude="longitude"
           />
@@ -172,7 +105,7 @@ const handleZoomChange = (newZoom) => {
           v-model:zoom="zoom"
           :draw-enabled="drawEnabled"
           :land-use-type="landUseType"
-          @draw-end="handleDrawEnd"
+          @draw-end="handleDrawEndWithResults"
           @update:center="handleCenterChange"
           @update:zoom="handleZoomChange"
         />
