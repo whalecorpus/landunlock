@@ -83,19 +83,44 @@ const carbonMetaphor = (effectiveCarbon) => {
   // Array of carbon equivalencies with their coefficients and descriptions
   const carbonEquivalencies = [
     {
-      verb: 'skipping',
+      verb: 'stopping',
       activity: 'transatlantic flights',
-      coefficient: 1, // source: Aarathi :)
+      coefficient: 250, // source: Jae
     },
-    {
-      verb: 'planting',
-      activity: 'hectares of full-grown mangroves',
-      coefficient: 23.1, // tons CO2 per hectare of trees; https://winrock.org/flr-calculator/
-    }, // this doesn't make sense for reforestation comparison
     {
       verb: 'taking',
       activity: 'cars off the road for one year',
       coefficient: 4.6, // tons CO2 per car per year; https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle
+    },
+    {
+      verb: 'offsetting',
+      activity: 'US households\' annual energy usage',
+      coefficient: 4.798, // tons CO2 per avg US household per year; https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references; "Home electricity use"
+    },
+    {
+      verb: 'offsetting',
+      activity: 'barrels of oil',
+      coefficient: 0.43, // tons CO2 per barrel of oil; https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references; "Barrels of oil consumed"
+    },
+    {
+      verb: 'recycling',
+      activity: 'tons of waste instead of putting in landfill',
+      coefficient: 2.83, // tons CO2e per ton of waste; https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references; "Tons of waste recycled instead of landfilled"
+    },
+    {
+      verb: 'avoiding',
+      activity: 'kilograms of beef consumption',
+      coefficient: 0.071, // tons CO2e difference between beef-heavy and plant-based diet; https://ourworldindata.org/carbon-footprint-food-methane
+    },
+    {
+      verb: 'eliminating',
+      activity: 'smartphone productions',
+      coefficient: 0.07, // tons CO2e per smartphone; https://www.apple.com/environment/pdf/products/iphone/iPhone_12_PER_Oct2020.pdf
+    },
+    {
+      verb: "cancelling out USA's 2020 emissions",
+      activity: 'times',
+      coefficient: 4230000, // tons CO2 emitted by US in 2020
     },
   ]
 
