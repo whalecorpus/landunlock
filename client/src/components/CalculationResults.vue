@@ -1,16 +1,28 @@
 <template>
-  <div v-if="area" class="calculation-results">
-    <div class="main-result">
-      <p>
-        With your <span class="highlight">{{ formatArea(area) }}</span> of solar panels,
-        you would produce <span class="highlight">{{ (area / 10000 * MWhPerYearPerHectare).toFixed(2) }} MWh</span> per year.
-      </p>
+  <div class="results-container">
+    <div v-if="area" class="calculation-results">
+      <div class="main-result">
+        <p>
+          With your <span class="highlight">{{ formatArea(area) }}</span> of solar panels,
+          you would produce <span class="highlight">{{ (area / 10000 * MWhPerYearPerHectare).toFixed(2) }} MWh</span> per year.
+        </p>
+      </div>
+
+      <div class="context">
+        <p class="carbon-offset">
+          Carbon offset: {{ (area /10000 * carbonOffsetPerYearPerHectare).toFixed(1) }} tons CO₂e per year. <br> <span id="carbon-metaphor">Equivalent to {{ carbonMetaphor(area / 10000 * carbonOffsetPerYearPerHectare) }}. </span>
+        </p>
+      </div>
     </div>
 
-    <div class="context">
-      <p class="carbon-offset">
-        Carbon offset: {{ (area /10000 * carbonOffsetPerYearPerHectare).toFixed(1) }} tons CO₂e per year. <br> <span id="carbon-metaphor">Equivalent to {{ carbonMetaphor(area / 10000 * carbonOffsetPerYearPerHectare) }}. </span>
-      </p>
+    <div v-if="forestArea && forestResults" class="forest-calculation-results">
+      <div class="main-result">
+        <p>
+          With <span class="highlight">{{ formatArea(forestArea) }}</span> of {{ forestResults.bestType }} forest,
+          you would sequester about <span class="highlight">{{ ((forestArea / 10000) * forestResults.oneYearPotential).toFixed(1) }} tons CO₂e</span> in the first year and,
+          and <span class="highlight">{{ ((forestArea / 10000) * forestResults.twentyYearPotential).toFixed(1) }} tons CO₂e</span> over 20 years.
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -19,15 +31,27 @@
 defineProps({
   area: {
     type: Number,
-    required: true
+    required: false
   },
   MWhPerYearPerHectare: {
     type: Number,
-    required: true
+    required: false
   },
   carbonOffsetPerYearPerHectare: {
     type: Number,
-    required: true
+    required: false
+  },
+  forestArea: {
+    type: Number,
+    required: false
+  },
+  forestResults: {
+    type: Object,
+    required: false,
+    validator: (value) => {
+      if (!value) return true
+      return 'bestType' in value && 'oneYearPotential' in value && 'twentyYearPotential' in value
+    }
   }
 })
 
@@ -78,7 +102,14 @@ const carbonMetaphor = (effectiveCarbon) => {
 </script>
 
 <style scoped>
-.calculation-results {
+.results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calculation-results,
+.forest-calculation-results {
   background: white;
   padding: 1rem;
   border-radius: 8px;
@@ -114,4 +145,7 @@ const carbonMetaphor = (effectiveCarbon) => {
   color: #4a5568;
 }
 
+.forest-calculation-results .highlight {
+  color: #2c5282;
+}
 </style> 

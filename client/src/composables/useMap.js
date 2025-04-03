@@ -74,9 +74,15 @@ export function useMap() {
       // Convert selected area to number of 1000 sqm units
       const areaHectares = selectedArea.value / 10000 // Convert to hectares
       console.log('updated calculations with coefficients:', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
-      return {
-        energyProduction: areaHectares * MWhPerYearPerHectare.value,
-        carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
+      
+      if (landUseType.value === 'solar') {
+        return {
+          energyProduction: areaHectares * MWhPerYearPerHectare.value,
+          carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
+        }
+      } else {
+        // For forest, we'll return null since the results will come from the API
+        return null
       }
     }
     
@@ -196,10 +202,50 @@ export function useMap() {
       }
 
       const data = await response.json()
-      console.log('forest data:', data)
+      lastForestApiCallLocation.value = loc
+      return consolidateData(data)
     } catch (e) {
       console.error('Calculation error:', e)
       throw new Error('Failed to calculate potential. Please try again.')
+    }
+  }
+
+  /**
+   * Consolidates the data from the API into a single object with the best type and carbon potential
+   * A lot of room for expansion here; and user input could be used to select the type of tree
+   * @param {*} data 
+   * @returns 
+   */
+  const consolidateData = (data) => {
+    let bestType = null
+    let bestOneYear = -1
+    let bestTwentyYear = -1
+
+    const checkForestType = (type, potential) => {
+      if (potential === 'N/A') return
+      const oneYear = potential.potential_removal_one_year_tCO2e
+      const twentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
+      
+      if (twentyYear > bestTwentyYear) {
+        bestType = type
+        bestOneYear = oneYear
+        bestTwentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
+      }
+    }
+
+    // Check all forest types in both categories
+    Object.entries(data.forestResults['Plantations and Woodlots']).forEach(([type, potential]) => {
+      checkForestType(type, potential)
+    })
+
+    Object.entries(data.forestResults['Other Forest Types']).forEach(([type, potential]) => {
+      checkForestType(type, potential)
+    })
+
+    return {
+      bestType,
+      oneYearPotential: bestOneYear,
+      twentyYearPotential: bestTwentyYear
     }
   }
 

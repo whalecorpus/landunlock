@@ -38,8 +38,7 @@ const handleLocationUpdateWithLoading = async (loc) => {
   error.value = null
   try {
     solarCalculationResult.value = await calculateSolarPotential(loc)
-    // forestCalculationResult.value = await calculateForestPotential(loc)
-    await calculateForestPotential(loc)
+    forestCalculationResult.value = await calculateForestPotential(loc)
   } catch (e) {
     error.value = e.message
   } finally {
@@ -50,13 +49,17 @@ const handleLocationUpdateWithLoading = async (loc) => {
 const handleDrawEndWithResults = (area, geometry) => {
   const results = handleDrawEnd(area, geometry)
   if (results) {
-    solarCalculationResult.value = results
+    // TODO: maybe do both here?
+    if (landUseType.value === 'solar') {
+      solarCalculationResult.value = results
+    }
   }
 }
 
 const handleClearPolygons = () => {
   clearPolygons()
   solarCalculationResult.value = null
+  forestCalculationResult.value = null
 }
 </script>
 
@@ -156,12 +159,21 @@ const handleClearPolygons = () => {
         </div>
 
         <!-- Results panel moved to the right -->
-        <div v-if="solarCalculationResult && solarPanelArea" class="results-panel">
-          <CalculationResults 
-            :area="solarPanelArea"
-            :MWhPerYearPerHectare="MWhPerYearPerHectare"
-            :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
-          />
+        <div class="results-panel">
+          <div v-if="solarCalculationResult && solarPanelArea">
+            <CalculationResults 
+              :area="solarPanelArea"
+              :MWhPerYearPerHectare="MWhPerYearPerHectare"
+              :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
+            />
+          </div>
+          <br>
+          <div v-if="forestCalculationResult && reforestationArea">
+            <CalculationResults 
+              :forest-area="reforestationArea"
+              :forest-results="forestCalculationResult"
+            />
+          </div>
         </div>
       </div>
     </main>
