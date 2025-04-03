@@ -7,8 +7,16 @@ export function useMap() {
   const center = computed(() => [longitude.value, latitude.value])
   const zoom = ref(17)
   const drawEnabled = ref(false)
-  const selectedArea = ref(null)
-  const landUseType = 'solar'
+  
+  // Change from single area to array of polygons
+  const polygons = ref([])
+  // Compute total area across all polygons
+  const selectedArea = computed(() => {
+    if (polygons.value.length === 0) return null
+    return polygons.value.reduce((sum, polygon) => sum + polygon.area, 0)
+  })
+  
+  const landUseType = ref('solar') // Set as ref to allow toggling in the future
 
   // Track API call conditions
   const lastApiCallLocation = ref(null)
@@ -26,10 +34,17 @@ export function useMap() {
     drawEnabled.value = !drawEnabled.value
   }
 
-  const handleDrawEnd = (area) => {
+  const handleDrawEnd = (area, geometry) => {
     drawEnabled.value = false
-    selectedArea.value = area
-    console.log('selected area', selectedArea.value)
+    
+    // Add the new polygon to the array
+    polygons.value.push({
+      geometry,
+      area,
+      type: landUseType.value
+    })
+    
+    console.log('Added polygon', polygons.value.length, 'Total area:', selectedArea.value)
     
     // Update calculations with the new area using current coefficients
     if (selectedArea.value) {
@@ -41,6 +56,10 @@ export function useMap() {
       }
     }
     return null
+  }
+
+  const clearPolygons = () => {
+    polygons.value = []
   }
 
   const handleCenterChange = (newCenter) => {
@@ -109,6 +128,7 @@ export function useMap() {
     zoom,
     drawEnabled,
     selectedArea,
+    polygons, // Expose the polygons array
     landUseType,
     MWhPerYearPerHectare,
     carbonOffsetPerYearPerHectare,
@@ -117,8 +137,9 @@ export function useMap() {
     handleLocationUpdate,
     toggleDraw,
     handleDrawEnd,
+    clearPolygons, // New method to clear all polygons
     handleCenterChange,
     handleZoomChange,
     calculatePotential
   }
-} 
+}

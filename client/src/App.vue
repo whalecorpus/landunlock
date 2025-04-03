@@ -12,11 +12,13 @@ const {
   zoom,
   drawEnabled,
   selectedArea,
+  polygons,
   landUseType,
   MWhPerYearPerHectare,
   carbonOffsetPerYearPerHectare,
   toggleDraw,
   handleDrawEnd,
+  clearPolygons,
   handleCenterChange,
   handleZoomChange,
   calculatePotential
@@ -38,11 +40,16 @@ const handleLocationUpdateWithLoading = async (loc) => {
   }
 }
 
-const handleDrawEndWithResults = (area) => {
-  const results = handleDrawEnd(area)
+const handleDrawEndWithResults = (area, geometry) => {
+  const results = handleDrawEnd(area, geometry)
   if (results) {
     calculationResult.value = results
   }
+}
+
+const handleClearPolygons = () => {
+  clearPolygons()
+  calculationResult.value = null
 }
 </script>
 
@@ -71,11 +78,9 @@ const handleDrawEndWithResults = (area) => {
             <button @click="toggleDraw" class="draw-button">
               {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
             </button>
-            <p v-if="selectedArea" class="area-info">
-              Selected area: {{ (selectedArea).toFixed(0) }} sq meters ({{ (selectedArea / 10000).toFixed(2) }} hectares)
-            </p>
+            
             <p v-if="drawEnabled" class="drawing-instructions">
-              Click on the map to start drawing a polygon. Click each vertex position and double-click to finish.
+              Click on the map to start drawing your solar panel or reforestation area. Click each vertex position and complete the shape to finish.
             </p>
           </div>
           
@@ -90,9 +95,8 @@ const handleDrawEndWithResults = (area) => {
           </div>
 
           <!-- Results -->
-          <div v-if="calculationResult" class="results">
+          <div v-if="calculationResult && selectedArea" class="results">
             <CalculationResults 
-              v-if="selectedArea"
               :area="selectedArea"
               :MWhPerYearPerHectare="MWhPerYearPerHectare"
               :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
@@ -105,7 +109,9 @@ const handleDrawEndWithResults = (area) => {
           v-model:zoom="zoom"
           :draw-enabled="drawEnabled"
           :land-use-type="landUseType"
+          :polygons="polygons"
           @draw-end="handleDrawEndWithResults"
+          @clear-polygons="handleClearPolygons"
           @update:center="handleCenterChange"
           @update:zoom="handleZoomChange"
         />
@@ -222,12 +228,6 @@ h1 {
 
 .draw-button:hover {
   background: #45a049;
-}
-
-.area-info {
-  margin-top: 0.5rem;
-  font-weight: 500;
-  color: #2c3e50;
 }
 
 .drawing-instructions {
