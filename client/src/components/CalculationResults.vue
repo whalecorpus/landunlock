@@ -35,7 +35,7 @@ const formatArea = (areaInSqMeters) => {
   if (areaInSqMeters >= 10000) {
     return `${(areaInSqMeters / 10000).toFixed(2)} hectares`
   }
-  return `${areaInSqMeters.toFixed(2)} sq. meters`
+  return `${areaInSqMeters.toFixed(5)} sq. meters`
 }
 
 const carbonMetaphor = (effectiveCarbon) => {

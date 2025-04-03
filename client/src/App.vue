@@ -121,7 +121,13 @@ const handleCenterChange = (event) => {
 <template>
   <div class="app">
     <header>
-      <h1>Land Unlock</h1>
+      <div class="header-content">
+        <div class="logo-container">
+          <img src="/logo.png" alt="Land Unlock Logo" class="logo">
+          <h1>Land Unlock</h1>
+        </div>
+        <a href="/about.html" class="about-link">About</a>
+      </div>
     </header>
 
     <main>
@@ -160,7 +166,7 @@ const handleCenterChange = (event) => {
             <CalculationResults 
               v-if="selectedArea"
               :area="selectedArea"
-              :kWh-per-year-per-hectare="MWhPerYearPerHectare"
+              :MWhPerYearPerHectare="MWhPerYearPerHectare"
               :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
             />
           </div>
@@ -215,7 +221,24 @@ html, body {
 
 header {
   margin-bottom: 2rem;
-  text-align: center;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.logo {
+  height: 48px;
+  width: auto;
 }
 
 h1 {
@@ -308,6 +331,19 @@ h1 {
   font-size: 0.9rem;
   color: #666;
   font-style: italic;
+}
+
+.about-link {
+  color: #2c3e50;
+  text-decoration: none;
+  font-size: 1.1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.about-link:hover {
+  background-color: #f5f5f5;
 }
 
 @media (max-width: 768px) {
