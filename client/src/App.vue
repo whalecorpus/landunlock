@@ -24,10 +24,12 @@ const {
   clearPolygons,
   handleCenterChange,
   handleZoomChange,
-  calculatePotential
+  calculateSolarPotential,
+  calculateForestPotential
 } = useMap()
 
-const calculationResult = ref(null)
+const solarCalculationResult = ref(null)
+const forestCalculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
 
@@ -35,7 +37,8 @@ const handleLocationUpdateWithLoading = async (loc) => {
   isLoading.value = true
   error.value = null
   try {
-    calculationResult.value = await calculatePotential(loc)
+    solarCalculationResult.value = await calculateSolarPotential(loc)
+    forestCalculationResult.value = await calculateForestPotential(loc)
   } catch (e) {
     error.value = e.message
   } finally {
@@ -46,13 +49,17 @@ const handleLocationUpdateWithLoading = async (loc) => {
 const handleDrawEndWithResults = (area, geometry) => {
   const results = handleDrawEnd(area, geometry)
   if (results) {
-    calculationResult.value = results
+    // TODO: maybe do both here?
+    if (landUseType.value === 'solar') {
+      solarCalculationResult.value = results
+    }
   }
 }
 
 const handleClearPolygons = () => {
   clearPolygons()
-  calculationResult.value = null
+  solarCalculationResult.value = null
+  forestCalculationResult.value = null
 }
 </script>
 
@@ -135,28 +142,39 @@ const handleClearPolygons = () => {
           <div v-if="error" class="status-message error">
             {{ error }}
           </div>
+        </div>
+        
+        <div class="map-container">
+          <MapView
+            v-model:center="center"
+            v-model:zoom="zoom"
+            :draw-enabled="drawEnabled"
+            :land-use-type="landUseType"
+            :polygons="polygons"
+            @draw-end="handleDrawEndWithResults"
+            @clear-polygons="handleClearPolygons"
+            @update:center="handleCenterChange"
+            @update:zoom="handleZoomChange"
+          />
+        </div>
 
-          <!-- Results -->
-          <div v-if="calculationResult && selectedArea" class="results">
+        <!-- Results panel moved to the right -->
+        <div class="results-panel">
+          <div v-if="solarCalculationResult && solarPanelArea">
             <CalculationResults 
-              :area="selectedArea"
+              :area="solarPanelArea"
               :MWhPerYearPerHectare="MWhPerYearPerHectare"
               :carbon-offset-per-year-per-hectare="carbonOffsetPerYearPerHectare"
             />
           </div>
+          <br>
+          <div v-if="forestCalculationResult && reforestationArea">
+            <CalculationResults 
+              :forest-area="reforestationArea"
+              :forest-results="forestCalculationResult"
+            />
+          </div>
         </div>
-        
-        <MapView
-          v-model:center="center"
-          v-model:zoom="zoom"
-          :draw-enabled="drawEnabled"
-          :land-use-type="landUseType"
-          :polygons="polygons"
-          @draw-end="handleDrawEndWithResults"
-          @clear-polygons="handleClearPolygons"
-          @update:center="handleCenterChange"
-          @update:zoom="handleZoomChange"
-        />
       </div>
     </main>
   </div>
@@ -170,20 +188,22 @@ html, body {
 }
 
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   padding: 2rem;
   min-height: 100vh;
 }
 
 header {
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .logo-container {
@@ -203,10 +223,16 @@ h1 {
   font-size: 2.5rem;
 }
 
+main {
+  width: 100%;
+}
+
 .content {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 300px 1fr 300px;
   gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .sidebar {
@@ -350,6 +376,32 @@ h1 {
 
 .about-link:hover {
   background-color: #f5f5f5;
+}
+
+.map-container {
+  position: relative;
+  height: 100%;
+  min-height: 600px;
+}
+
+.results-panel {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .content {
+    grid-template-columns: 300px 1fr;
+  }
+  
+  .results-panel {
+    grid-column: 1 / -1;
+    position: static;
+  }
 }
 
 @media (max-width: 768px) {

@@ -40,7 +40,8 @@ export function useMap() {
   }
 
   // Track API call conditions
-  const lastApiCallLocation = ref(null)
+  const lastSolarApiCallLocation = ref(null)
+  const lastForestApiCallLocation = ref(null)
   const MWhPerYearPerHectare = ref(1850)
   const carbonOffsetPerYearPerHectare = ref(650)
   const kmDiff = ref(50) // Distance in kilometers before making a new API call
@@ -49,7 +50,7 @@ export function useMap() {
     latitude.value = loc.latitude
     longitude.value = loc.longitude
     center.value = [loc.longitude, loc.latitude]
-    calculatePotential(loc)
+    calculateSolarPotential(loc)
   }
 
   const toggleDraw = () => {
@@ -73,9 +74,15 @@ export function useMap() {
       // Convert selected area to number of 1000 sqm units
       const areaHectares = selectedArea.value / 10000 // Convert to hectares
       console.log('updated calculations with coefficients:', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
-      return {
-        energyProduction: areaHectares * MWhPerYearPerHectare.value,
-        carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
+      
+      if (landUseType.value === 'solar') {
+        return {
+          energyProduction: areaHectares * MWhPerYearPerHectare.value,
+          carbonOffset: areaHectares * carbonOffsetPerYearPerHectare.value
+        }
+      } else {
+        // For forest, we'll return null since the results will come from the API
+        return null
       }
     }
     
@@ -96,16 +103,16 @@ export function useMap() {
     zoom.value = newZoom
   }
 
-  const calculatePotential = async (loc) => {
-    // if we have a lastApiCallLocation, we need to check if the new location is too close to the last one
-    if (lastApiCallLocation.value) {
+  const calculateSolarPotential = async (loc) => {
+    // if we have a lastSolarApiCallLocation, we need to check if the new location is too close to the last one
+    if (lastSolarApiCallLocation.value) {
       const distance = getDistance(
-        [lastApiCallLocation.value.longitude, lastApiCallLocation.value.latitude],
+        [lastSolarApiCallLocation.value.longitude, lastSolarApiCallLocation.value.latitude],
         [loc.longitude, loc.latitude]
       ) / 1000 // Convert meters to kilometers
       
       if (distance < kmDiff.value) {
-        console.log('not recalculating because distance is too short', distance)
+        console.log('not recalculating solar potential because distance is too short', distance)
         return null
       }
     }
@@ -122,7 +129,7 @@ export function useMap() {
           latitude: loc.latitude,
           longitude: loc.longitude,
           area: 10000, // we always want to calculate the potential for one hectare
-          landUseType: landUseType.value
+          landUseType: 'solar'
         })
       })
 
@@ -131,9 +138,20 @@ export function useMap() {
       }
 
       const data = await response.json()
-      lastApiCallLocation.value = loc
-      MWhPerYearPerHectare.value = data.energyProduction
-      carbonOffsetPerYearPerHectare.value = data.carbonOffset
+      lastSolarApiCallLocation.value = loc
+      
+      // Ensure we have valid numbers before updating
+      if (typeof data.energyProduction === 'number' && !isNaN(data.energyProduction)) {
+        MWhPerYearPerHectare.value = data.energyProduction
+      } else {
+        console.error('Invalid energy production data:', data.energyProduction)
+      }
+      if (typeof data.carbonOffset === 'number' && !isNaN(data.carbonOffset)) {
+        carbonOffsetPerYearPerHectare.value = data.carbonOffset
+      } else {
+        console.error('Invalid carbon offset data:', data.carbonOffset)
+      }
+      
       console.log('coefficients updated:', {
         MWh: MWhPerYearPerHectare.value,
         carbon: carbonOffsetPerYearPerHectare.value
@@ -141,7 +159,93 @@ export function useMap() {
       return data
     } catch (e) {
       console.error('Calculation error:', e)
+      // Return default values on error
+      return {
+        energyProduction: MWhPerYearPerHectare.value,
+        carbonOffset: carbonOffsetPerYearPerHectare.value
+      }
+    }
+  }
+
+  const calculateForestPotential = async (loc) => {
+    // if we have a lastForestApiCallLocation, we need to check if the new location is too close to the last one
+    if (lastForestApiCallLocation.value) {
+      const distance = getDistance(
+        [lastForestApiCallLocation.value.longitude, lastForestApiCallLocation.value.latitude],
+        [loc.longitude, loc.latitude]
+      ) / 1000 // Convert meters to kilometers
+      
+      if (distance < kmDiff.value) {
+        console.log('not recalculating forest potential because distance is too short', distance)
+        return null
+      }
+    }
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
+    
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          area: 10000, // we always want to calculate the potential for one hectare
+          landUseType: 'reforestation'
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      lastForestApiCallLocation.value = loc
+      return consolidateData(data)
+    } catch (e) {
+      console.error('Calculation error:', e)
       throw new Error('Failed to calculate potential. Please try again.')
+    }
+  }
+
+  /**
+   * Consolidates the data from the API into a single object with the best type and carbon potential
+   * A lot of room for expansion here; and user input could be used to select the type of tree
+   * @param {*} data 
+   * @returns 
+   */
+  const consolidateData = (data) => {
+    let bestType = null
+    let bestOneYear = -1
+    let bestTwentyYear = -1
+
+    const checkForestType = (type, potential) => {
+      if (potential === 'N/A') return
+      const oneYear = potential.potential_removal_one_year_tCO2e
+      const twentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
+      
+      if (twentyYear > bestTwentyYear) {
+        bestType = type
+        bestOneYear = oneYear
+        bestTwentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
+      }
+    }
+
+    // Check all forest types in both categories
+    Object.entries(data.forestResults['Plantations and Woodlots']).forEach(([type, potential]) => {
+      checkForestType(type, potential)
+    })
+
+    Object.entries(data.forestResults['Other Forest Types']).forEach(([type, potential]) => {
+      checkForestType(type, potential)
+    })
+
+    return {
+      bestType,
+      oneYearPotential: bestOneYear,
+      twentyYearPotential: bestTwentyYear
     }
   }
 
@@ -168,6 +272,7 @@ export function useMap() {
     toggleLandUseType,
     handleCenterChange,
     handleZoomChange,
-    calculatePotential
+    calculateSolarPotential,
+    calculateForestPotential
   }
 }

@@ -43,16 +43,22 @@ def calculate_impact():
     orientation = data.get('orientation', 'SOUTH')
     if(latitude < 0):
         orientation = 'NORTH'
-    area = data.get('area', 0)
+    
+    areaSquareMeters = data.get('area', 0)
+    areaHectares = areaSquareMeters / 10000
+
     land_use_type = data.get('landUseType', 'solar')
     
     if land_use_type == 'reforestation':
-        result = calculate_reforestation_impact(area, location)
+        result = calculate_reforestation_impact(
+            areaHectares, 
+            location
+        )
         print(result)
     elif land_use_type == 'solar':  
         # Extract all solar parameters with defaults
         result = calculate_solar_impact(
-            area_hectares=area / 10000,  # Convert sq meters to hectares
+            area_hectares=areaHectares,
             location=location,
             altitude_meters=data.get('altitude', 10),
             orientation=orientation,  
