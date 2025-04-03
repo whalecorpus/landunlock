@@ -177,8 +177,8 @@ def calculate_reforestation_impact(area_hectares, location):
             print(f"Debug - Skipping {forest_type} due to N/A value")
             forest_results[forest_type] = {
                 'potential_removal_one_year_tCO2e': 'N/A',
-                #'cumulative_removal_tCO2e': ['N/A'] * 20, # not returning this because it's 20 NA's
-                'average_20year_cumulative_removal_per_year_tCO2e': 'N/A'
+                'cumulative_removal_tCO2e': ['N/A'] * 20
+                #'average_20year_cumulative_removal_per_year_tCO2e': 'N/A'
             }
             continue
             
@@ -198,13 +198,13 @@ def calculate_reforestation_impact(area_hectares, location):
                 cumulative_removal_tCO2e.append(cumulative_removal_tCO2e[year-2] + potential_removal_one_year_tCO2e)
         
         # Calculate average yearly removal over 20 years
-        average_20year_cumulative_removal_per_year_tCO2e = sum(cumulative_removal_tCO2e) / 20
+        #average_20year_cumulative_removal_per_year_tCO2e = sum(cumulative_removal_tCO2e) / 20
         print(f"Debug - Average yearly removal: {average_20year_cumulative_removal_per_year_tCO2e}")
         
         forest_results[forest_type] = {
             'potential_removal_one_year_tCO2e': potential_removal_one_year_tCO2e,
-            #'cumulative_removal_tCO2e': cumulative_removal_tCO2e, # not returning this because it's 20 numbers
-            'average_20year_cumulative_removal_per_year_tCO2e': average_20year_cumulative_removal_per_year_tCO2e
+            'cumulative_removal_tCO2e': cumulative_removal_tCO2e 
+            #'average_20year_cumulative_removal_per_year_tCO2e': average_20year_cumulative_removal_per_year_tCO2e
         }
     
     # Restructure the results into categories
