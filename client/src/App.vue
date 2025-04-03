@@ -118,7 +118,7 @@ const handleClearPolygons = () => {
               <p class="area-info total-area" v-if="solarPanelArea && reforestationArea">
                 Total area: {{ (selectedArea).toFixed(0) }} sq meters
               </p>
-              <button @click="handleClearPolygons" class="clear-button">Clear All Polygons</button>
+              <button @click="handleClearPolygons" class="clear-button">Clear All</button>
             </div>
             
             <p v-if="drawEnabled" class="drawing-instructions">

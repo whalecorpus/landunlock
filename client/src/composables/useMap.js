@@ -24,7 +24,8 @@ export function useMap() {
     return reforestationPolygons.reduce((sum, polygon) => sum + polygon.area, 0)
   })
   
-  // Keep selectedArea for backward compatibility and total area calculations
+  // Keep selectedArea for result calculations for now
+  // TODO: use separate solar and reforestation areas for result calculations
   const selectedArea = computed(() => {
     if (polygons.value.length === 0) return null
     return polygons.value.reduce((sum, polygon) => sum + polygon.area, 0)
@@ -133,6 +134,10 @@ export function useMap() {
       lastApiCallLocation.value = loc
       MWhPerYearPerHectare.value = data.energyProduction
       carbonOffsetPerYearPerHectare.value = data.carbonOffset
+      console.log('coefficients updated:', {
+        MWh: MWhPerYearPerHectare.value,
+        carbon: carbonOffsetPerYearPerHectare.value
+      })
       return data
     } catch (e) {
       console.error('Calculation error:', e)
