@@ -199,7 +199,7 @@ def calculate_reforestation_impact(area_hectares, location):
         
         # Calculate average yearly removal over 20 years
         #average_20year_cumulative_removal_per_year_tCO2e = sum(cumulative_removal_tCO2e) / 20
-        print(f"Debug - Average yearly removal: {average_20year_cumulative_removal_per_year_tCO2e}")
+        # print(f"Debug - Average yearly removal: {average_20year_cumulative_removal_per_year_tCO2e}")
         
         forest_results[forest_type] = {
             'potential_removal_one_year_tCO2e': potential_removal_one_year_tCO2e,
@@ -215,12 +215,12 @@ def calculate_reforestation_impact(area_hectares, location):
         
     restructured_results = {
         'Plantations and Woodlots': {
-            k: {key: round(value, 1) if value != 'N/A' else 'N/A' 
+            k: {key: [round(x, 1) if x != 'N/A' else 'N/A' for x in value] if isinstance(value, list) else (round(value, 1) if value != 'N/A' else 'N/A')
                 for key, value in v.items()} 
             for k, v in forest_results.items() if k in plantation_types
         },
         'Other Forest Types': {
-            k: {key: round(value, 1) if value != 'N/A' else 'N/A' 
+            k: {key: [round(x, 1) if x != 'N/A' else 'N/A' for x in value] if isinstance(value, list) else (round(value, 1) if value != 'N/A' else 'N/A')
                 for key, value in v.items()} 
             for k, v in forest_results.items() if k not in plantation_types
         }
