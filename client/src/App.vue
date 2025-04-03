@@ -38,7 +38,8 @@ const handleLocationUpdateWithLoading = async (loc) => {
   error.value = null
   try {
     solarCalculationResult.value = await calculateSolarPotential(loc)
-    forestCalculationResult.value = await calculateForestPotential(loc)
+    const resultsArray = await calculateForestPotential(loc)
+    forestCalculationResult.value = resultsArray[Math.floor(Math.random() * resultsArray.length)] // show user random forest type. TODO: use usr input
   } catch (e) {
     error.value = e.message
   } finally {
@@ -48,18 +49,10 @@ const handleLocationUpdateWithLoading = async (loc) => {
 
 const handleDrawEndWithResults = (area, geometry) => {
   const results = handleDrawEnd(area, geometry)
-  if (results) {
-    // TODO: maybe do both here?
-    if (landUseType.value === 'solar') {
-      solarCalculationResult.value = results
-    }
-  }
 }
 
 const handleClearPolygons = () => {
   clearPolygons()
-  solarCalculationResult.value = null
-  forestCalculationResult.value = null
 }
 </script>
 
@@ -113,18 +106,6 @@ const handleClearPolygons = () => {
             </button>
             
             <div v-if="polygons.length > 0" class="polygons-info">
-              <p class="polygons-count">
-                {{ polygons.length }} polygon{{ polygons.length !== 1 ? 's' : '' }} drawn
-              </p>
-              <p v-if="solarPanelArea" class="area-info">
-                Solar panel area: {{ (solarPanelArea).toFixed(0) }} sq meters
-              </p>
-              <p v-if="reforestationArea" class="area-info">
-                Reforestation area: {{ (reforestationArea).toFixed(0) }} sq meters
-              </p>
-              <p class="area-info total-area" v-if="solarPanelArea && reforestationArea">
-                Total area: {{ (selectedArea).toFixed(0) }} sq meters
-              </p>
               <button @click="handleClearPolygons" class="clear-button">Clear All</button>
             </div>
             

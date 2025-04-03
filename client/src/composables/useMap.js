@@ -211,42 +211,37 @@ export function useMap() {
   }
 
   /**
-   * Consolidates the data from the API into a single object with the best type and carbon potential
+   * Consolidates the data from the API into an array of objects with a type and its first-year and twenty year carbon potential
    * A lot of room for expansion here; and user input could be used to select the type of tree
    * @param {*} data 
    * @returns 
    */
   const consolidateData = (data) => {
-    let bestType = null
-    let bestOneYear = -1
-    let bestTwentyYear = -1
-
-    const checkForestType = (type, potential) => {
+    let forestResults = []
+  
+    const addForestType = (type, potential) => {
       if (potential === 'N/A') return
       const oneYear = potential.potential_removal_one_year_tCO2e
+      if (oneYear === 'N/A') return
       const twentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
-      
-      if (twentyYear > bestTwentyYear) {
-        bestType = type
-        bestOneYear = oneYear
-        bestTwentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
-      }
+      forestResults.push({
+        type: type,
+        oneYearPotential: oneYear,
+        twentyYearPotential: twentyYear
+      })
     }
-
-    // Check all forest types in both categories
+  
+    // Add all non-N/A forest types in both categories
     Object.entries(data.forestResults['Plantations and Woodlots']).forEach(([type, potential]) => {
-      checkForestType(type, potential)
+      addForestType(type, potential)
     })
-
+  
     Object.entries(data.forestResults['Other Forest Types']).forEach(([type, potential]) => {
-      checkForestType(type, potential)
+      addForestType(type, potential)
     })
-
-    return {
-      bestType,
-      oneYearPotential: bestOneYear,
-      twentyYearPotential: bestTwentyYear
-    }
+  
+    console.log('forestResults', forestResults)
+    return forestResults
   }
 
   return {

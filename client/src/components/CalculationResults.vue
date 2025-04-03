@@ -18,7 +18,7 @@
     <div v-if="forestArea && forestResults" class="forest-calculation-results">
       <div class="main-result">
         <p>
-          With <span class="highlight">{{ formatArea(forestArea) }}</span> of {{ forestResults.bestType }} forest,
+          With <span class="highlight">{{ formatArea(forestArea) }}</span> of {{ mapForestType(forestResults.type) }} forest,
           you would sequester about <span class="highlight">{{ ((forestArea / 10000) * forestResults.oneYearPotential).toFixed(1) }} tons CO₂e</span> in the first year and,
           and <span class="highlight">{{ ((forestArea / 10000) * forestResults.twentyYearPotential).toFixed(1) }} tons CO₂e</span> over 20 years.
         </p>
@@ -50,7 +50,7 @@ defineProps({
     required: false,
     validator: (value) => {
       if (!value) return true
-      return 'bestType' in value && 'oneYearPotential' in value && 'twentyYearPotential' in value
+      return 'type' in value && 'oneYearPotential' in value && 'twentyYearPotential' in value
     }
   }
 })
@@ -60,6 +60,23 @@ const formatArea = (areaInSqMeters) => {
     return `${(areaInSqMeters / 10000).toFixed(2)} hectares`
   }
   return `${areaInSqMeters.toFixed(5)} sq. meters`
+}
+
+const mapForestType = (type) => {
+  switch (type) {
+    case 'other broadleaf':
+      return 'broadleaf'
+    case 'other conifer':
+      return 'conifer'
+    case 'Mangrove Restoration - shrub':
+      return 'mangrove shrub'
+    case 'Mangrove Restoration - tree':
+      return 'mangrove tree'
+    case 'Natural Regeneration':
+      return 'generic native'
+    default:
+      return type
+  }
 }
 
 const carbonMetaphor = (effectiveCarbon) => {
