@@ -8,7 +8,7 @@ import io
 import base64
 from dotenv import load_dotenv
 import os
-from .country_utils import get_country_name_for_emissions, get_emissions_factor
+from .solar_utils import get_country_name_for_emissions, get_emissions_factor
 from .util import Point
 
 load_dotenv()

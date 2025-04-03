@@ -1,16 +1,17 @@
 import reverse_geocoder as rg
+
+
 _emissions_factors = None  # Module-level cache
 
 def _load_emissions_factors():
     """
-    Load grid emissions factors from the data file.
+    Load IFI grid emissions factors from the data file.
     Returns a dictionary mapping country names to their emissions factors (gCO2/kWh).
     """
     from pathlib import Path
     
     # Create the path to EFs data file, relative to backend directory
     data_file = Path(__file__).parent.parent / 'data' / 'Harmonized_IFI_CM_grid_factors_intermittent_energy_2021_v3.2_0'
-
 
     emissions_factors = {}
     with open(data_file, 'r') as f:
@@ -30,8 +31,8 @@ def get_emissions_factor(country_name):
         _emissions_factors = _load_emissions_factors()
     return _emissions_factors.get(country_name)
 
-# Mapping from ISO 2-letter codes to emissions factor data file country names
-COUNTRY_MAPPING = {
+# Mapping from ISO 2-letter codes to IFI emissions factor data file country names, for all countries
+COUNTRY_MAPPING_IFI = {
     'AF': 'Afghanistan',
     'AL': 'Albania',
     'DZ': 'Algeria',
@@ -228,7 +229,6 @@ COUNTRY_MAPPING = {
     'ZW': 'Zimbabwe'
 }
 
-
 def get_country_name_for_emissions(latitude, longitude):
     """
     Get the country name as it appears in the emissions data file
@@ -237,4 +237,4 @@ def get_country_name_for_emissions(latitude, longitude):
     coordinates = (latitude, longitude)
     result = rg.search(coordinates)
     iso_code = result[0]['cc']
-    return COUNTRY_MAPPING.get(iso_code)
+    return COUNTRY_MAPPING_IFI.get(iso_code)
