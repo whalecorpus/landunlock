@@ -1,20 +1,20 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Map, Layers, Sources, Interactions, MapControls } from "vue3-openlayers"
-import { getArea, getDistance  } from "ol/sphere";
+import { getDistance } from "ol/sphere";
 import LocationForm from './components/LocationForm.vue'
 import CalculationResults from './components/CalculationResults.vue'
+import MapView from './components/MapView.vue'
 
 const latitude = ref(41.3948)
 const longitude = ref(-73.4540)
 const center = computed(() => [longitude.value, latitude.value] )
 const zoom = ref(17)
-const projection = 'EPSG:4326'
 const calculationResult = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
 const drawEnabled = ref(false)
 const selectedArea = ref(null)
+const landUseType = 'solar'
 
 // Track API call conditions
 const lastApiCallLocation = ref(null)
@@ -38,7 +38,6 @@ const calculatePotential = async (loc) => {
       return
     }
   }
-
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/calculate'
   
@@ -87,14 +86,8 @@ const toggleDraw = () => {
   drawEnabled.value = !drawEnabled.value
 }
 
-const handleDrawEnd = (event) => {
-  drawEnabled.value = false;
-  const feature = event.feature
-  
-  // Get the geometry and calculate area (in square meters)
-  const geometry = feature.getGeometry()
-  const area = getArea(geometry, {projection: projection})
-  
+const handleDrawEnd = (area) => {
+  drawEnabled.value = false
   selectedArea.value = area
   console.log('selected area', selectedArea.value)
   
@@ -109,13 +102,15 @@ const handleDrawEnd = (event) => {
   }
 }
 
-const handleCenterChange = (event) => {
-    longitude.value = event.target.getCenter()[0];
-    latitude.value = event.target.getCenter()[1];
-    zoom.value = event.target.getZoom();
-    console.log('current coefficients', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
+const handleCenterChange = (newCenter) => {
+  longitude.value = newCenter[0]
+  latitude.value = newCenter[1]
+  console.log('current coefficients', MWhPerYearPerHectare.value, carbonOffsetPerYearPerHectare.value)
 }
 
+const handleZoomChange = (newZoom) => {
+  zoom.value = newZoom
+}
 </script>
 
 <template>
@@ -140,7 +135,7 @@ const handleCenterChange = (event) => {
           />
           
           <div class="drawing-controls">
-          <button @click="toggleDraw" class="draw-button">
+            <button @click="toggleDraw" class="draw-button">
               {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
             </button>
             <p v-if="selectedArea" class="area-info">
@@ -172,34 +167,15 @@ const handleCenterChange = (event) => {
           </div>
         </div>
         
-        <div class="map-container">
-          <Map.OlMap
-            style="width: 800px; height: 600px;">
-            <Map.OlView
-                :center="center"
-                :zoom="zoom"
-                :projection="projection"
-                @change:center="handleCenterChange"
-                />
-            <Layers.OlTileLayer>
-              <Sources.OlSourceOsm />
-            </Layers.OlTileLayer>
-            
-            <!-- Vector layer for drawn features -->
-            <Layers.OlVectorLayer>
-              <Sources.OlSourceVector>
-                <!-- Draw interaction -->
-                <Interactions.OlInteractionDraw
-                  v-if="drawEnabled"
-                  type="Polygon"
-                  @drawend="handleDrawEnd"
-                >
-                </Interactions.OlInteractionDraw>
-              </Sources.OlSourceVector>
-            </Layers.OlVectorLayer>
-            <MapControls.OlScalelineControl bar/>
-          </Map.OlMap>
-        </div>
+        <MapView
+          v-model:center="center"
+          v-model:zoom="zoom"
+          :draw-enabled="drawEnabled"
+          :land-use-type="landUseType"
+          @draw-end="handleDrawEnd"
+          @update:center="handleCenterChange"
+          @update:zoom="handleZoomChange"
+        />
       </div>
     </main>
   </div>
@@ -256,11 +232,6 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.map-container {
-  border: 1px solid #ccc;
-  border-radius: 4px;
 }
 
 .status-message {
