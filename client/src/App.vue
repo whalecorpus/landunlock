@@ -12,12 +12,15 @@ const {
   zoom,
   drawEnabled,
   selectedArea,
+  solarPanelArea,
+  reforestationArea,
   polygons,
   landUseType,
   MWhPerYearPerHectare,
   carbonOffsetPerYearPerHectare,
   toggleDraw,
   handleDrawEnd,
+  toggleLandUseType,
   clearPolygons,
   handleCenterChange,
   handleZoomChange,
@@ -75,12 +78,51 @@ const handleClearPolygons = () => {
           />
           
           <div class="drawing-controls">
+            <!-- Land use type toggle buttons -->
+            <div class="toggle-container">
+              <button 
+                @click="toggleLandUseType" 
+                class="toggle-button"
+                :class="{ 'active': landUseType === 'solar' }"
+                :disabled="drawEnabled"
+              >
+                Solar Panels
+              </button>
+              <button 
+                @click="toggleLandUseType" 
+                class="toggle-button"
+                :class="{ 'active': landUseType === 'reforestation' }"
+                :disabled="drawEnabled"
+              >
+                Reforestation
+              </button>
+            </div>
+            
             <button @click="toggleDraw" class="draw-button">
-              {{ drawEnabled ? 'Disable Drawing' : 'Manually Select a roof' }}
+              {{ drawEnabled 
+                ? 'Cancel Drawing' 
+                : (landUseType === 'solar' ? 'Add Solar Panel Area' : 'Add Reforestation Area') 
+              }}
             </button>
             
+            <div v-if="polygons.length > 0" class="polygons-info">
+              <p class="polygons-count">
+                {{ polygons.length }} polygon{{ polygons.length !== 1 ? 's' : '' }} drawn
+              </p>
+              <p v-if="solarPanelArea" class="area-info">
+                Solar panel area: {{ (solarPanelArea).toFixed(0) }} sq meters
+              </p>
+              <p v-if="reforestationArea" class="area-info">
+                Reforestation area: {{ (reforestationArea).toFixed(0) }} sq meters
+              </p>
+              <p class="area-info total-area" v-if="solarPanelArea && reforestationArea">
+                Total area: {{ (selectedArea).toFixed(0) }} sq meters
+              </p>
+              <button @click="handleClearPolygons" class="clear-button">Clear All</button>
+            </div>
+            
             <p v-if="drawEnabled" class="drawing-instructions">
-              Click on the map to start drawing your solar panel or reforestation area. Click each vertex position and complete the shape to finish.
+              Click on the map to start drawing a polygon. Click each vertex position and double-click to finish.
             </p>
           </div>
           
@@ -196,24 +238,44 @@ h1 {
   margin-top: 1rem;
 }
 
-.results h3 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.results pre {
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
 .drawing-controls {
   margin-top: 1rem;
   padding: 1rem;
   background: white;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toggle-container {
+  display: flex;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.toggle-button.active {
+  background-color: #2c3e50;
+  color: white;
+  font-weight: 500;
+}
+
+.toggle-button:first-child {
+  border-right: 1px solid #e0e0e0;
+}
+
+.toggle-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .draw-button {
@@ -228,6 +290,46 @@ h1 {
 
 .draw-button:hover {
   background: #45a049;
+}
+
+.polygons-info {
+  margin-top: 0.5rem;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.polygons-count {
+  margin: 0 0 5px 0;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.area-info {
+  margin: 5px 0;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.total-area {
+  margin-top: 10px;
+  padding-top: 5px;
+  border-top: 1px solid #ddd;
+}
+
+.clear-button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 5px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clear-button:hover {
+  background: #d32f2f;
 }
 
 .drawing-instructions {
