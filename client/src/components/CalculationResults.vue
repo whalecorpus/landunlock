@@ -145,7 +145,7 @@ const carbonMetaphor = (effectiveCarbon) => {
   color: #4a5568;
 }
 
-.forest-calculation-results .highlight {
+/* .forest-calculation-results .highlight {
   color: #2c5282;
-}
+} */
 </style> 
