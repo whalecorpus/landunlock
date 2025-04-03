@@ -120,7 +120,7 @@ const carbonMetaphor = (effectiveCarbon) => {
     {
       verb: "cancelling out USA's 2020 emissions",
       activity: 'times',
-      coefficient: 4230000, // tons CO2 emitted by US in 2020
+      coefficient: 4600000000, // https://www.eia.gov/todayinenergy/detail.php
     },
   ]
 
