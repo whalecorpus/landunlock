@@ -18,7 +18,7 @@
           ? { 
               'stroke-color': '#FFD700',
               'stroke-width': 3,
-              'fill-color': 'rgba(255, 215, 0, 0.3)'
+              'fill-color': 'rgba(0, 0, 0, 0.5)'
             } 
           : { 
               'stroke-color': '#228B22',
@@ -37,7 +37,7 @@
               ? { 
                   'stroke-color': '#FFD700',
                   'stroke-width': 3,
-                  'fill-color': 'rgba(255, 215, 0, 0.3)'
+                  'fill-color': 'rgba(0, 0, 0, 0.5)'
                 } 
               : { 
                   'stroke-color': '#228B22',
@@ -57,8 +57,7 @@
 <script setup>
 import { Map, Layers, Sources, Interactions, MapControls } from "vue3-openlayers"
 import { getArea } from "ol/sphere"
-import { Feature } from "ol"
-import { ref, onMounted, watchEffect, computed } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   center: {
@@ -91,6 +90,7 @@ const sourceRef = ref(null)
 
 // Add the new shape to our list of shapes
 const handleDrawEnd = (event) => {
+  console.log('Drawing with landUseType:', props.landUseType)
   const feature = event.feature
   const geometry = feature.getGeometry()
   const area = getArea(geometry, {projection: projection})
@@ -104,31 +104,12 @@ const handleCenterChange = (event) => {
   emit('update:zoom', event.target.getZoom())
 }
 
-const clearPolygons = () => {
-  if (sourceRef.value && sourceRef.value.source) {
+watch(() => props.polygons, (newPolygons) => {
+  if (newPolygons.length === 0 && sourceRef.value && sourceRef.value.source) {
     sourceRef.value.source.clear()
-    emit('clearPolygons')
   }
-}
+}, { deep: true })
 
-// Watch for changes to the polygons array
-watchEffect(() => {
-  if (!sourceRef.value || !sourceRef.value.source) return
-  
-  // Render the polygons when they change
-  sourceRef.value.source.clear()
-  props.polygons.forEach(polygon => {
-    if (polygon.geometry) {
-      try {
-        const feature = new Feature(polygon.geometry)
-        // Apply different styles based on the polygon type
-        sourceRef.value.source.addFeature(feature)
-      } catch (error) {
-        console.error('Error rendering polygon:', error)
-      }
-    }
-  })
-})
 </script>
 
 <style scoped>
