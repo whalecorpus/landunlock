@@ -223,7 +223,7 @@ export function useMap() {
       if (potential === 'N/A') return
       const oneYear = potential.potential_removal_one_year_tCO2e
       if (oneYear === 'N/A') return
-      const twentyYear = potential.cumulative_removal_tCO2e.reduce((sum, val) => sum + val, 0) // sum of all years
+      const twentyYear = potential.cumulative_removal_tCO2e[19]
       forestResults.push({
         type: type,
         oneYearPotential: oneYear,
