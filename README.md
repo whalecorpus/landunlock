@@ -2,28 +2,29 @@
 
 A tool for comparing the carbon impact of different land use choices, specifically reforestation versus solar panel installation.
 
+Made by: Aarathi, Anna, Jae, Ryan in Terra's Software for Climate class
+
 ## Local Development Setup
 
 ### Prerequisites
 
-- Node.js (v16+)
+- Node.js (v19+)
 - Python (v3.8+)
-<!--- Mapbox API key (for the map functionality; I believe it's free up to 50k uses, and we're going to navigate away from this library early in development I hope)-->
-
 
 ### Frontend Setup
 1. Navigate to the client directory: `cd client`
 2. Install dependencies: `npm install`
-<!--3. Swap in your Mapbox API key in MapDisplay.js for `MAPBOX_TOKEN`-->
 4. Start the development server: `npm run dev`
 
 ### Backend Setup
 Add a `.env` file to your `backend` directory with the following form. Get your API key from: https://developer.nrel.gov/signup/
 ```
+FLASK_ENV=development
 PVLIB_API_KEY=
-PVLIB_API_EMAIL=
+PVLIB_EMAIL=
 PORT=3000
 CORS_ORIGIN=http://localhost:[FRONTEND_PORT]
+GEOCODE_MAPS_API_KEY=67ec335734a23161688682xbg65f1ea
 ```
 
 To get the app running!
@@ -47,4 +48,5 @@ source venv/bin/activate
 
 ## Contributing
 
-We only have two weeks! You can push right to main.
+For team members: We only have two weeks! You can push right to main.
+For others: we welcome pull requests. If you're in Terra community, feel free to reach out to us on Slack.
