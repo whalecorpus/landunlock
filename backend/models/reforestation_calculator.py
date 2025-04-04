@@ -168,13 +168,13 @@ def calculate_reforestation_impact(area_hectares, location):
     # Calculate carbon sequestration for each forest type
     forest_results = {}
     for forest_type in forest_types:
-        print(f"\nDebug - Processing forest type: {forest_type}")
+        # print(f"\nDebug - Processing forest type: {forest_type}")
         tC_ha_y = sequestration_data[forest_type]
-        print(f"Debug - tC_ha_y: {tC_ha_y}")
+        # print(f"Debug - tC_ha_y: {tC_ha_y}")
         
         # Skip if N/A
         if tC_ha_y == 'N/A':
-            print(f"Debug - Skipping {forest_type} due to N/A value")
+            # print(f"Debug - Skipping {forest_type} due to N/A value")
             forest_results[forest_type] = {
                 'potential_removal_one_year_tCO2e': 'N/A',
                 'cumulative_removal_tCO2e': ['N/A'] * 20
@@ -184,17 +184,17 @@ def calculate_reforestation_impact(area_hectares, location):
             
         # Calculate potential removal per year
         potential_removal_one_year_tCO2e = area_hectares * tC_ha_y * 44/12 # multiply by the ratio of the molecular weight of carbon dioxide to that of carbon (44/12)
-        print(f"Debug - potential_removal_one_year_tCO2e: {potential_removal_one_year_tCO2e}")
+        # print(f"Debug - potential_removal_one_year_tCO2e: {potential_removal_one_year_tCO2e}")
         
         # Calculate cumulative removal over 20 years
         cumulative_removal_tCO2e = []
         for year in range(1, 21):
-            print(f"Debug - Processing year {year}")
+            # print(f"Debug - Processing year {year}")
             if year == 1:
-                print(f"Debug - Year 1: Adding {potential_removal_one_year_tCO2e}")
+                # print(f"Debug - Year 1: Adding {potential_removal_one_year_tCO2e}")
                 cumulative_removal_tCO2e.append(potential_removal_one_year_tCO2e)
             else:
-                print(f"Debug - Year {year}: Adding {cumulative_removal_tCO2e[year-2]} + {potential_removal_one_year_tCO2e}")
+                # print(f"Debug - Year {year}: Adding {cumulative_removal_tCO2e[year-2]} + {potential_removal_one_year_tCO2e}")
                 cumulative_removal_tCO2e.append(cumulative_removal_tCO2e[year-2] + potential_removal_one_year_tCO2e)
         
         # Calculate average yearly removal over 20 years
@@ -214,17 +214,22 @@ def calculate_reforestation_impact(area_hectares, location):
         print(f"{k}: {v}")
         
     restructured_results = {
-        'Plantations and Woodlots': {
-            k: {key: [round(x, 1) if x != 'N/A' else 'N/A' for x in value] if isinstance(value, list) else (round(value, 1) if value != 'N/A' else 'N/A')
-                for key, value in v.items()} 
-            for k, v in forest_results.items() if k in plantation_types
-        },
-        'Other Forest Types': {
-            k: {key: [round(x, 1) if x != 'N/A' else 'N/A' for x in value] if isinstance(value, list) else (round(value, 1) if value != 'N/A' else 'N/A')
-                for key, value in v.items()} 
-            for k, v in forest_results.items() if k not in plantation_types
-        }
+        'Plantations and Woodlots': {},
+        'Other Forest Types': {}
     }
+
+    for k, v in forest_results.items():
+        if k in plantation_types:
+            category = 'Plantations and Woodlots'
+        else:
+            category = 'Other Forest Types'
+            
+        restructured_results[category][k] = {}
+        for key, value in v.items():
+            if isinstance(value, list):
+                restructured_results[category][k][key] = [round(x, 1) if x != 'N/A' else 'N/A' for x in value]
+            else:
+                restructured_results[category][k][key] = round(value, 1) if value != 'N/A' else 'N/A'
     
     print("\nDebug - restructured_results contents:")
     for category, results in restructured_results.items():
