@@ -3,6 +3,7 @@ from .reforestation_utils import get_subnational_unit, normalize_to_Winrock_coun
 import json
 from pathlib import Path
 from geopy.geocoders import Nominatim
+import psutil
 #import time
 
 # Initialize Nominatim geocoder
@@ -125,6 +126,12 @@ def get_country_median_values(winrock_data, country):
     
     return median_values
 
+def log_memory_usage(label):
+    process = psutil.Process(os.getpid())
+    memory_mb = process.memory_info().rss / 1024 / 1024
+    print(f"MEMORY [{label}]: {memory_mb:.2f} MB")
+    return memory_mb
+
 def calculate_reforestation_impact(area_hectares, location):
     """
     Calculate the carbon sequestration impact of reforestation at a given location.
@@ -136,6 +143,7 @@ def calculate_reforestation_impact(area_hectares, location):
     Returns:
         dict: Results including carbon sequestered per year for each forest type
     """
+    log_memory_usage("START calculate_reforestation_impact")
     latitude = location.lat
     longitude = location.long
     
@@ -143,12 +151,14 @@ def calculate_reforestation_impact(area_hectares, location):
     address, country_units, country = get_location_info(latitude, longitude)
     if not address or not country_units:
         return "Winrock location info not found"
+    log_memory_usage("After get_location_info")
     
     # Get the Winrock subnational unit for the location
     subnational_unit, match_info = get_subnational_unit(address, country_units)
     
     # Get Winrock data for the location
     winrock_data = get_winrock_data()
+    log_memory_usage("After get_winrock_data")
     
     # If no subnational unit was matched, use country median values
     if not subnational_unit or match_info == 'no_match':
@@ -156,7 +166,8 @@ def calculate_reforestation_impact(area_hectares, location):
         subnational_unit = "Country Median"
     else:
         sequestration_data = winrock_data[country][subnational_unit]
-    
+
+    log_memory_usage("Before forest types processing")    
     # Forest types to process (excluding averages and flags)
     forest_types = [
         'teak', 'eucalyptus', 'other broadleaf', 'oak', 'pine', 
@@ -164,7 +175,7 @@ def calculate_reforestation_impact(area_hectares, location):
         'Mangrove Restoration - tree', 'Mangrove Restoration - shrub', 
         'Agroforestry'
     ]
-    
+    # 
     # Calculate carbon sequestration for each forest type
     forest_results = {}
     for forest_type in forest_types:
@@ -209,10 +220,9 @@ def calculate_reforestation_impact(area_hectares, location):
     
     # Restructure the results into categories
     plantation_types = ['teak', 'eucalyptus', 'other broadleaf', 'oak', 'pine', 'other conifer']
-    print("\nDebug - forest_results contents:")
-    for k, v in forest_results.items():
-        print(f"{k}: {v}")
-        
+
+    log_memory_usage("Before restructured_results creation")        
+
     restructured_results = {
         'Plantations and Woodlots': {},
         'Other Forest Types': {}
@@ -231,11 +241,10 @@ def calculate_reforestation_impact(area_hectares, location):
             else:
                 restructured_results[category][k][key] = round(value, 1) if value != 'N/A' else 'N/A'
     
-    print("\nDebug - restructured_results contents:")
-    for category, results in restructured_results.items():
-        print(f"\n{category}:")
-        for k, v in results.items():
-            print(f"{k}: {v}")
+    log_memory_usage("After restructured_results creation")
+
+    gc.collect()
+    log_memory_usage("Before returning results")
     
     return {
         'landUseType': 'reforestation',
